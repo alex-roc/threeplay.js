@@ -22,6 +22,16 @@ export interface RendererBackend {
   dispose(): void;
 }
 
+/** What the render plugin hands to a backend factory (`backends/*.ts`). */
+export interface BackendOpts {
+  /** The canvas to draw into, or `null` for the headless backend. */
+  canvas: HTMLCanvasElement | null;
+  /** Antialiasing. */
+  antialias: boolean;
+  /** Enable shadow maps. */
+  shadows: boolean;
+}
+
 /** Options added to `threeplay()` by the render plugin. */
 export interface RenderOpts {
   /**
