@@ -1,5 +1,5 @@
 import { PCFShadowMap, WebGPURenderer } from "three/webgpu";
-import type { BackendOpts, RendererBackend, RendererKind } from "../types";
+import type { BackendOpts, RendererBackend, RendererKind } from "../types.js";
 
 /**
  * `WebGPURenderer`. When the browser has no WebGPU, three falls back to its

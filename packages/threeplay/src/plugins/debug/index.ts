@@ -1,14 +1,14 @@
 import { Raycaster } from "three";
-import { definePlugin } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { BoxHelpers } from "./boxes";
-import { FpsMeter } from "./fps";
-import { describeObject, pickObject } from "./inspect";
-import { formatMessage, LogBuffer } from "./log";
-import { DebugUI } from "./panel";
-import type { Debug, DebugAPI } from "./types";
+import { definePlugin } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { BoxHelpers } from "./boxes.js";
+import { FpsMeter } from "./fps.js";
+import { describeObject, pickObject } from "./inspect.js";
+import { formatMessage, LogBuffer } from "./log.js";
+import { DebugUI } from "./panel.js";
+import type { Debug, DebugAPI } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /** Built-in plugin: the `debug` object, an inspector panel and an on-screen log. */
 export const debugPlugin = definePlugin<DebugAPI>({

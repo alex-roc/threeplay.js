@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import type { GameObj } from "./types";
+import type { GameObj } from "./types.js";
 
 /** A vector or anything with x, y, z. */
 export type Vec3Input = Vector3 | { x: number; y: number; z: number };

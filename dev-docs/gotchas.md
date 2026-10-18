@@ -20,6 +20,11 @@ you hit something non-obvious.
 - Awaiting a timer takes a few microtask ticks: tests should `await` a `setTimeout`.
 - `window?.x` throws in Node when `window` doesn't exist: use `typeof window`.
 
+- Relative imports carry a `.js` extension (`from "./engine.js"`), and the package
+  typechecks with `moduleResolution: NodeNext`: extensionless specifiers in the emitted
+  `.d.ts` don't resolve for NodeNext consumers, so the plugins' `declare module`
+  augmentations silently vanish and `threeplay({ width })` becomes a type error.
+
 ## three.js (r186)
 
 - `PCFSoftShadowMap` was removed (both renderers warn and use `PCFShadowMap`).

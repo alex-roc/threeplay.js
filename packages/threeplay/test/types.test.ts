@@ -1,5 +1,5 @@
 import { describe, expectTypeOf, it } from "vitest";
-import type { Engine } from "../src";
+import type { Engine } from "../src/index.js";
 
 // Compile-time checks: the Engine type includes every plugin API.
 describe("Engine type", () => {

@@ -1,4 +1,4 @@
-import type { ButtonBinding, GamepadButton, Key, MouseButton } from "./types";
+import type { ButtonBinding, GamepadButton, Key, MouseButton } from "./types.js";
 
 const KEY_ALIASES: Record<string, string> = {
   arrowleft: "left",

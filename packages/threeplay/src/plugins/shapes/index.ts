@@ -1,9 +1,9 @@
 import { type BufferGeometry, Color, Material, Mesh, type Texture } from "three";
-import { definePlugin } from "../../core/engine";
-import { rgb, toColor } from "../../core/math";
-import type { ColorLike, Engine, GameObj, TimerController } from "../../core/types";
-import { self } from "../../core/util";
-import { DEFAULT_SEGMENTS, makeGeometry } from "./geometry";
+import { definePlugin } from "../../core/engine.js";
+import { rgb, toColor } from "../../core/math.js";
+import type { ColorLike, Engine, GameObj, TimerController } from "../../core/types.js";
+import { self } from "../../core/util.js";
+import { DEFAULT_SEGMENTS, makeGeometry } from "./geometry.js";
 import {
   applyOpacity,
   bumpMaterials,
@@ -14,7 +14,7 @@ import {
   repeatedTexture,
   repeatOf,
   shareColor,
-} from "./materials";
+} from "./materials.js";
 import type {
   ColorComp,
   MaterialOpts,
@@ -24,9 +24,9 @@ import type {
   ShapeDesc,
   ShapeOpts,
   ShapesAPI,
-} from "./types";
+} from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /**
  * Built-in plugin: primitive shapes (`box`, `sphere`, `capsule`, `cylinder`,

@@ -1,7 +1,7 @@
 import { DirectionalLight, type Light, type Object3D, PointLight, SpotLight } from "three";
-import { toColor } from "../../core/math";
-import { self } from "../../core/util";
-import type { LightOpts, RenderAPI } from "./types";
+import { toColor } from "../../core/math.js";
+import { self } from "../../core/util.js";
+import type { LightOpts, RenderAPI } from "./types.js";
 
 type TargetedLight = Light & { target?: Object3D };
 

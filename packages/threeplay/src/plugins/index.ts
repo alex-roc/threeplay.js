@@ -1,16 +1,16 @@
-import type { PluginLike } from "../core/types";
-import { assetsPlugin } from "./assets";
-import { audioPlugin } from "./audio";
-import { cameraPlugin } from "./camera";
-import { debugPlugin } from "./debug";
-import { gameplayPlugin } from "./gameplay";
-import { hudPlugin } from "./hud";
-import { inputPlugin } from "./input";
-import { levelPlugin } from "./level";
-import { physicsPlugin } from "./physics";
-import { renderPlugin } from "./render";
-import { shapesPlugin } from "./shapes";
-import { transformPlugin } from "./transform";
+import type { PluginLike } from "../core/types.js";
+import { assetsPlugin } from "./assets/index.js";
+import { audioPlugin } from "./audio/index.js";
+import { cameraPlugin } from "./camera/index.js";
+import { debugPlugin } from "./debug/index.js";
+import { gameplayPlugin } from "./gameplay/index.js";
+import { hudPlugin } from "./hud/index.js";
+import { inputPlugin } from "./input/index.js";
+import { levelPlugin } from "./level/index.js";
+import { physicsPlugin } from "./physics/index.js";
+import { renderPlugin } from "./render/index.js";
+import { shapesPlugin } from "./shapes/index.js";
+import { transformPlugin } from "./transform/index.js";
 
 export {
   assetsPlugin,

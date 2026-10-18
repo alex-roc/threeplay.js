@@ -1,6 +1,6 @@
 import type * as THREE from "three";
-import type { ColorLike, Comp, EventController } from "../../core/types";
-import type { Vec3Like } from "../transform/types";
+import type { ColorLike, Comp, EventController } from "../../core/types.js";
+import type { Vec3Like } from "../transform/types.js";
 
 /** Which three.js renderer draws the game. */
 export type RendererKind = "webgpu" | "webgl" | "none";
@@ -140,7 +140,7 @@ export interface RenderAPI {
   dirLight(opts?: LightOpts): Comp & { id: "dirLight"; light: THREE.DirectionalLight };
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     render: RenderAPI;
   }

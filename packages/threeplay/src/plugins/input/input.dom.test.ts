@@ -1,11 +1,11 @@
 // @vitest-environment happy-dom
 import * as THREE from "three";
 import { describe, expect, it, vi } from "vitest";
-import { createEngine, definePlugin } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import type { RenderAPI } from "../render/types";
-import { transformPlugin } from "../transform";
-import { inputPlugin } from ".";
+import { createEngine, definePlugin } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import type { RenderAPI } from "../render/types.js";
+import { transformPlugin } from "../transform/index.js";
+import { inputPlugin } from "./index.js";
 
 /**
  * A stand-in for the render plugin: a real DOM canvas and a camera ray that

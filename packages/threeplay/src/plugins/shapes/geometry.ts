@@ -7,7 +7,7 @@ import {
   PlaneGeometry,
   SphereGeometry,
 } from "three";
-import type { ShapeDesc } from "./types";
+import type { ShapeDesc } from "./types.js";
 
 /** Default geometry detail for round shapes. */
 export const DEFAULT_SEGMENTS = 24;

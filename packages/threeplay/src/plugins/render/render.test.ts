@@ -1,12 +1,12 @@
 import { Color, PerspectiveCamera, Vector2, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { transformPlugin } from "../transform";
-import { renderPlugin } from ".";
-import { barColor, computeLayout, layoutChanged } from "./layout";
-import { createDefaultLights, SHADOW_EXTENT, snapToTexel, sunFocus } from "./lighting";
-import { projectToScreen, screenToRay } from "./project";
+import { createEngine } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { transformPlugin } from "../transform/index.js";
+import { renderPlugin } from "./index.js";
+import { barColor, computeLayout, layoutChanged } from "./layout.js";
+import { createDefaultLights, SHADOW_EXTENT, snapToTexel, sunFocus } from "./lighting.js";
+import { projectToScreen, screenToRay } from "./project.js";
 
 const make = (opts = {}) =>
   createEngine({ loop: "manual", renderer: "none", ...opts }, [

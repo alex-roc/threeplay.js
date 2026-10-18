@@ -1,4 +1,4 @@
-import type { Layout } from "./layout";
+import type { Layout } from "./layout.js";
 
 /** The DOM the render plugin owns: a wrapper with the canvas and the logical-size overlay. */
 export interface Stage {

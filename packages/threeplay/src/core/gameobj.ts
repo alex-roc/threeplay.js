@@ -1,6 +1,6 @@
 import type { Object3D } from "three";
 import { Group } from "three";
-import { EventEmitter } from "./events";
+import { EventEmitter } from "./events.js";
 import type {
   Comp,
   CompList,
@@ -10,7 +10,7 @@ import type {
   GetOpts,
   MergeComps,
   Tag,
-} from "./types";
+} from "./types.js";
 
 const LIFECYCLE = new Set([
   "id",

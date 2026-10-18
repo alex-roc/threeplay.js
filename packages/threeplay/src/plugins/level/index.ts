@@ -1,10 +1,10 @@
 import { Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import type { Comp, CompList, Engine, GameObj } from "../../core/types";
-import { cellKey, makeGrid, tileAt, tileCenter } from "./grid";
-import type { LevelAPI, LevelComp, LevelObj, LevelOpts } from "./types";
+import { definePlugin } from "../../core/engine.js";
+import type { Comp, CompList, Engine, GameObj } from "../../core/types.js";
+import { cellKey, makeGrid, tileAt, tileCenter } from "./grid.js";
+import type { LevelAPI, LevelComp, LevelObj, LevelOpts } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /** `true` if the component list already has a `pos()`. */
 const hasPos = (list: CompList) =>

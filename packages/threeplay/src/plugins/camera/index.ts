@@ -1,9 +1,15 @@
 import { Euler, Quaternion, Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import { clamp, deg2rad } from "../../core/math";
-import type { Engine, GameObj } from "../../core/types";
-import { isGameObj, targetPos, toVec3 } from "../../core/util";
-import { horizontalForward, offsetAngles, orbitOffset, smoothFactor, yawOfDirection } from "./math";
+import { definePlugin } from "../../core/engine.js";
+import { clamp, deg2rad } from "../../core/math.js";
+import type { Engine, GameObj } from "../../core/types.js";
+import { isGameObj, targetPos, toVec3 } from "../../core/util.js";
+import {
+  horizontalForward,
+  offsetAngles,
+  orbitOffset,
+  smoothFactor,
+  yawOfDirection,
+} from "./math.js";
 import type {
   CameraAPI,
   CameraController,
@@ -15,9 +21,9 @@ import type {
   ThirdPersonController,
   ThirdPersonOpts,
   TopDownOpts,
-} from "./types";
+} from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 const UP = new Vector3(0, 1, 0);
 /** Degrees of orbit per pixel dragged with `orbitCamera`. */

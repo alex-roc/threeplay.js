@@ -1,10 +1,10 @@
-import { createEngine } from "./core/engine";
-import type { Engine, PluginLike, ThreeplayOpts } from "./core/types";
-import { installGlobals } from "./globals";
+import { createEngine } from "./core/engine.js";
+import type { Engine, PluginLike, ThreeplayOpts } from "./core/types.js";
+import { installGlobals } from "./globals.js";
 
-export { globalKeys, installGlobals } from "./globals";
+export { globalKeys, installGlobals } from "./globals.js";
 
-import { defaultPlugins } from "./plugins";
+import { defaultPlugins } from "./plugins/index.js";
 
 /** Options of {@link threeplay}. */
 export interface ThreeplayInit extends ThreeplayOpts {
@@ -33,23 +33,23 @@ export function threeplay(opts: ThreeplayInit = {}): Engine {
 
 export default threeplay;
 
-export type { HookFn } from "./core/engine";
-export { createEngine, definePlugin, joinControllers } from "./core/engine";
-export { EventEmitter, HandlerList, Scope } from "./core/events";
-export { GameObjImpl } from "./core/gameobj";
-export * from "./core/math";
-export type * from "./core/types";
-export * from "./core/util";
-export * from "./plugins";
-export type * from "./plugins/assets/types";
-export type * from "./plugins/audio/types";
-export type * from "./plugins/camera/types";
-export type * from "./plugins/debug/types";
-export type * from "./plugins/gameplay/types";
-export type * from "./plugins/hud/types";
-export type * from "./plugins/input/types";
-export type * from "./plugins/level/types";
-export type * from "./plugins/physics/types";
-export type * from "./plugins/render/types";
-export type * from "./plugins/shapes/types";
-export type * from "./plugins/transform/types";
+export type { HookFn } from "./core/engine.js";
+export { createEngine, definePlugin, joinControllers } from "./core/engine.js";
+export { EventEmitter, HandlerList, Scope } from "./core/events.js";
+export { GameObjImpl } from "./core/gameobj.js";
+export * from "./core/math.js";
+export type * from "./core/types.js";
+export * from "./core/util.js";
+export type * from "./plugins/assets/types.js";
+export type * from "./plugins/audio/types.js";
+export type * from "./plugins/camera/types.js";
+export type * from "./plugins/debug/types.js";
+export type * from "./plugins/gameplay/types.js";
+export type * from "./plugins/hud/types.js";
+export * from "./plugins/index.js";
+export type * from "./plugins/input/types.js";
+export type * from "./plugins/level/types.js";
+export type * from "./plugins/physics/types.js";
+export type * from "./plugins/render/types.js";
+export type * from "./plugins/shapes/types.js";
+export type * from "./plugins/transform/types.js";

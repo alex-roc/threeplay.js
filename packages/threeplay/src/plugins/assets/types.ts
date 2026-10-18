@@ -1,6 +1,6 @@
 import type * as THREE from "three";
-import type { EventController } from "../../core/types";
-import type { ShapeComp } from "../shapes/types";
+import type { EventController } from "../../core/types.js";
+import type { ShapeComp } from "../shapes/types.js";
 
 /** A loaded (or procedurally defined) model, ready to be instanced with `model()`. */
 export interface ModelData {
@@ -98,7 +98,7 @@ export interface AssetsAPI {
   model(name: string, opts?: ModelOpts): ModelComp;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     assets: AssetsAPI;
   }

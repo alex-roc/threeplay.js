@@ -1,10 +1,10 @@
 import { Box3, BoxGeometry, Mesh } from "three";
 import { describe, expect, it, vi } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { renderPlugin } from "../render";
-import { transformPlugin } from "../transform";
-import { gameplayPlugin } from ".";
+import { createEngine } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { renderPlugin } from "../render/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { gameplayPlugin } from "./index.js";
 
 const make = () =>
   createEngine({ loop: "manual", renderer: "none", maxDt: 1 }, [

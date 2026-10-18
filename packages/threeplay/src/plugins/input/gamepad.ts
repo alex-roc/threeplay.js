@@ -1,6 +1,6 @@
 import { Vector2 } from "three";
-import { GAMEPAD_BUTTONS } from "./keys";
-import type { GamepadButton } from "./types";
+import { GAMEPAD_BUTTONS } from "./keys.js";
+import type { GamepadButton } from "./types.js";
 
 /** Radial dead zone of the sticks. */
 export const STICK_DEAD_ZONE = 0.15;

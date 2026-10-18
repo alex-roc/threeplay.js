@@ -1,6 +1,6 @@
 import { BufferAttribute, BufferGeometry, LineBasicMaterial, LineSegments } from "three";
-import type { Engine } from "../../core/types";
-import type { RapierBackend } from "./rapier";
+import type { Engine } from "../../core/types.js";
+import type { RapierBackend } from "./rapier.js";
 
 /**
  * Draws Rapier's debug wireframe (colliders, contacts) as a `LineSegments`

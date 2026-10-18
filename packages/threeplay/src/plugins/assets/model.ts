@@ -9,8 +9,8 @@ import {
   type Mesh,
 } from "three";
 import { clone } from "three/addons/utils/SkeletonUtils.js";
-import { self } from "../../core/util";
-import type { ModelComp, ModelData, ModelOpts, PlayAnimOpts } from "./types";
+import { self } from "../../core/util.js";
+import type { ModelComp, ModelData, ModelOpts, PlayAnimOpts } from "./types.js";
 
 const _box = new Box3();
 

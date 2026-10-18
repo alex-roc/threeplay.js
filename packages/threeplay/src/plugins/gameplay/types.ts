@@ -1,5 +1,5 @@
-import type { Easing } from "../../core/math";
-import type { Comp, EventController, TimerController, Tweenable } from "../../core/types";
+import type { Easing } from "../../core/math.js";
+import type { Comp, EventController, TimerController, Tweenable } from "../../core/types.js";
 
 /**
  * Fields added by `health()`. Events are object events: `"hurt"` (amount),
@@ -110,7 +110,7 @@ export interface GameplayAPI {
   offscreen(opts?: OffscreenOpts): OffscreenComp;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     gameplay: GameplayAPI;
   }

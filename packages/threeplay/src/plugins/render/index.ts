@@ -1,18 +1,18 @@
 import { type Color, Fog, FogExp2, Vector2, type Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import { toColor } from "../../core/math";
-import type { ColorLike, Engine } from "../../core/types";
-import type { Vec3Like } from "../transform/types";
-import { createNoneBackend } from "./backends/none";
-import { barColor, computeLayout, type Layout, layoutChanged } from "./layout";
-import { createDefaultLights } from "./lighting";
-import { createLightComps } from "./lights";
-import { showError, showLoadingBar } from "./loading";
-import { projectToScreen, screenToRay } from "./project";
-import { createStage } from "./stage";
-import type { BackendOpts, FogOpts, RenderAPI, RendererBackend, RendererKind } from "./types";
+import { definePlugin } from "../../core/engine.js";
+import { toColor } from "../../core/math.js";
+import type { ColorLike, Engine } from "../../core/types.js";
+import type { Vec3Like } from "../transform/types.js";
+import { createNoneBackend } from "./backends/none.js";
+import { barColor, computeLayout, type Layout, layoutChanged } from "./layout.js";
+import { createDefaultLights } from "./lighting.js";
+import { createLightComps } from "./lights.js";
+import { showError, showLoadingBar } from "./loading.js";
+import { projectToScreen, screenToRay } from "./project.js";
+import { createStage } from "./stage.js";
+import type { BackendOpts, FogOpts, RenderAPI, RendererBackend, RendererKind } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /** Default clear color: a soft sky blue. */
 const DEFAULT_BACKGROUND = "#9fd3ff";
@@ -71,8 +71,8 @@ export const renderPlugin = definePlugin<RenderAPI>({
     async function loadBackend(want: "auto" | "webgpu" | "webgl") {
       const backend =
         want === "webgl"
-          ? (await import("./backends/webgl")).createWebGLBackend(backendOpts)
-          : (await import("./backends/webgpu")).createWebGPUBackend(backendOpts);
+          ? (await import("./backends/webgl.js")).createWebGLBackend(backendOpts)
+          : (await import("./backends/webgpu.js")).createWebGPUBackend(backendOpts);
       await backend.init();
       if (quit) backend.dispose();
       else adopt(backend);

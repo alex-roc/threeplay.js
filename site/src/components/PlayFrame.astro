@@ -1,6 +1,6 @@
 ---
 // Click-to-play facade: shows the thumbnail and only loads the game (Rapier alone is
-// ~1.7 MB gzip) when the visitor asks for it.
+// ~2 MB gzip with three.js and Rapier) when the visitor asks for it.
 import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
 import { url } from "../lib/url";
@@ -48,7 +48,7 @@ const src = example ? url(`play/${example}/index.html`) : undefined;
       <span class="play-disc">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5v19L21 12z"></path></svg>
       </span>
-      <small>Click to play (loads about 1.7 MB)</small>
+      <small>Click to play (loads about 2 MB)</small>
     </button>
   </div>
 </div>

@@ -177,3 +177,5 @@ declare global {
   const width: Engine["width"];
   const worldToHud: Engine["worldToHud"];
 }
+
+export {};

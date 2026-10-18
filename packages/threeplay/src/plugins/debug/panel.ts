@@ -1,4 +1,4 @@
-import type { LogLine } from "./log";
+import type { LogLine } from "./log.js";
 
 const BASE_STYLE =
   "position:absolute;margin:0;padding:4px 6px;font:11px/1.4 ui-monospace,Menlo,Consolas,monospace;" +

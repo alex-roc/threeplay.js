@@ -1,6 +1,6 @@
 import type { Object3D, Ray, Raycaster } from "three";
-import type { GameObj } from "../../core/types";
-import { gameObjOf } from "../../core/util";
+import type { GameObj } from "../../core/types.js";
+import { gameObjOf } from "../../core/util.js";
 
 /** Text lines describing an object for the inspector: id, tags and each component's `inspect()`. */
 export function describeObject(obj: GameObj): string[] {

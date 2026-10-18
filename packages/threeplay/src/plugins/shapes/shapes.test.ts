@@ -10,14 +10,14 @@ import {
   Vector3,
 } from "three";
 import { describe, expect, it, vi } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine, PluginLike } from "../../core/types";
-import { assetsPlugin } from "../assets";
-import { renderPlugin } from "../render";
-import { transformPlugin } from "../transform";
-import { shapesPlugin } from ".";
-import { makeGeometry } from "./geometry";
-import { applyOpacity, createMaterial, repeatOf } from "./materials";
+import { createEngine } from "../../core/engine.js";
+import type { Engine, PluginLike } from "../../core/types.js";
+import { assetsPlugin } from "../assets/index.js";
+import { renderPlugin } from "../render/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { makeGeometry } from "./geometry.js";
+import { shapesPlugin } from "./index.js";
+import { applyOpacity, createMaterial, repeatOf } from "./materials.js";
 
 const make = (extra: PluginLike[] = []) =>
   createEngine({ loop: "manual", renderer: "none" }, [

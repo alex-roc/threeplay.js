@@ -1,11 +1,11 @@
 import * as THREE from "three";
 import { describe, expect, it, vi } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine, GameObj } from "../../core/types";
-import { self } from "../../core/util";
-import type { ShapeDesc } from "../shapes/types";
-import { transformPlugin } from "../transform";
-import { physicsPlugin } from ".";
+import { createEngine } from "../../core/engine.js";
+import type { Engine, GameObj } from "../../core/types.js";
+import { self } from "../../core/util.js";
+import type { ShapeDesc } from "../shapes/types.js";
+import { transformPlugin } from "../transform/index.js";
+import { physicsPlugin } from "./index.js";
 
 /** A stand-in for the shapes plugin: honors the `shape`/`mesh` contract. */
 const shape = (desc: ShapeDesc) => ({

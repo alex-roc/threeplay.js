@@ -1,11 +1,11 @@
 import { Quaternion, Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import { clamp } from "../../core/math";
-import type { Engine } from "../../core/types";
-import { inertPlay, SoundPlay, setXYZ } from "./play";
-import type { AudioAPI, BeepOpts, PlayOpts } from "./types";
+import { definePlugin } from "../../core/engine.js";
+import { clamp } from "../../core/math.js";
+import type { Engine } from "../../core/types.js";
+import { inertPlay, SoundPlay, setXYZ } from "./play.js";
+import type { AudioAPI, BeepOpts, PlayOpts } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 const _pos = new Vector3();
 const _fwd = new Vector3();

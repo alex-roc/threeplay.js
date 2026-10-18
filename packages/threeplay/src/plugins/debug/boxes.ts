@@ -1,6 +1,6 @@
 import { Box3, Box3Helper, Group, type Object3D, type Scene } from "three";
-import type { GameObj } from "../../core/types";
-import { isVisible } from "./inspect";
+import type { GameObj } from "../../core/types.js";
+import { isVisible } from "./inspect.js";
 
 /**
  * Wireframe bounding boxes around every object with a `mesh`. Used by the

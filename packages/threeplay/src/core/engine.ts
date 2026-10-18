@@ -1,7 +1,7 @@
 import * as THREE from "three";
-import { EventEmitter, HandlerList, joinControllers, Scope } from "./events";
-import { type GameObjContext, GameObjImpl } from "./gameobj";
-import { type Easing, easings, lerpValue, mathAPI } from "./math";
+import { EventEmitter, HandlerList, joinControllers, Scope } from "./events.js";
+import { type GameObjContext, GameObjImpl } from "./gameobj.js";
+import { type Easing, easings, lerpValue, mathAPI } from "./math.js";
 import type {
   CompList,
   Engine,
@@ -17,7 +17,7 @@ import type {
   ThreeplayOpts,
   TimerController,
   Tweenable,
-} from "./types";
+} from "./types.js";
 
 /**
  * Creates an engine with the given plugins installed, without touching

@@ -1,12 +1,12 @@
 import { Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import type { Engine, EventController, GameObj, Tag } from "../../core/types";
-import { self } from "../../core/util";
-import type { Vec3Like } from "../transform/types";
-import { DebugLines } from "./debug";
-import { RapierBackend } from "./rapier";
-import { isSensorOf } from "./state";
-import { PhysicsSystem } from "./system";
+import { definePlugin } from "../../core/engine.js";
+import type { Engine, EventController, GameObj, Tag } from "../../core/types.js";
+import { self } from "../../core/util.js";
+import type { Vec3Like } from "../transform/types.js";
+import { DebugLines } from "./debug.js";
+import { RapierBackend } from "./rapier.js";
+import { isSensorOf } from "./state.js";
+import { PhysicsSystem } from "./system.js";
 import type {
   AreaComp,
   AreaOpts,
@@ -18,9 +18,9 @@ import type {
   PhysicsAPI,
   PhysicsBackend,
   RaycastOpts,
-} from "./types";
+} from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /** Default gravity strength (units/s², pulling down). */
 const DEFAULT_GRAVITY = 20;

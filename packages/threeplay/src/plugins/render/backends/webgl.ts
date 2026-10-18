@@ -1,5 +1,5 @@
 import { PCFShadowMap, WebGLRenderer } from "three";
-import type { BackendOpts, RendererBackend } from "../types";
+import type { BackendOpts, RendererBackend } from "../types.js";
 
 /** Classic `WebGLRenderer`: maximum compatibility. */
 export function createWebGLBackend(opts: BackendOpts): RendererBackend {

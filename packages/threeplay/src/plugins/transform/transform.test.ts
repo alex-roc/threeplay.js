@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { transformPlugin } from ".";
+import { createEngine } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { transformPlugin } from "./index.js";
 
 const make = () => createEngine({ loop: "manual" }, [transformPlugin]) as Engine;
 

@@ -1,14 +1,14 @@
 import { Box3, type BufferGeometry, Frustum, Matrix4, type Object3D, Sphere, Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import { lerp } from "../../core/math";
-import type { Engine } from "../../core/types";
-import { self } from "../../core/util";
-import { createHealth } from "./health";
-import { createState } from "./state";
-import { createTimer } from "./timer";
-import type { GameplayAPI, LifespanComp, OffscreenComp, OffscreenOpts } from "./types";
+import { definePlugin } from "../../core/engine.js";
+import { lerp } from "../../core/math.js";
+import type { Engine } from "../../core/types.js";
+import { self } from "../../core/util.js";
+import { createHealth } from "./health.js";
+import { createState } from "./state.js";
+import { createTimer } from "./timer.js";
+import type { GameplayAPI, LifespanComp, OffscreenComp, OffscreenOpts } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 const _tmpBox = new Box3();
 const _rel = new Matrix4();

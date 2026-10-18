@@ -1,4 +1,4 @@
-import type { GameObj } from "../../core/types";
+import type { GameObj } from "../../core/types.js";
 
 /** Options added to `threeplay()` by the debug plugin. */
 export interface DebugOpts {
@@ -44,7 +44,7 @@ export interface DebugAPI {
   debug: Debug;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     debug: DebugAPI;
   }

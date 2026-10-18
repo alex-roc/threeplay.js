@@ -6,7 +6,7 @@ import {
   type Scene,
   Vector3,
 } from "three";
-import type { Vec3Like } from "../transform/types";
+import type { Vec3Like } from "../transform/types.js";
 
 /** Half-size of the sun's shadow box, in world units. */
 export const SHADOW_EXTENT = 20;

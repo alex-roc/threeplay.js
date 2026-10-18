@@ -1,6 +1,6 @@
-import { type Easing, easings, lerpValue } from "../../core/math";
-import type { TimerController, Tweenable } from "../../core/types";
-import type { TimerComp } from "./types";
+import { type Easing, easings, lerpValue } from "../../core/math.js";
+import type { TimerController, Tweenable } from "../../core/types.js";
+import type { TimerComp } from "./types.js";
 
 interface Entry {
   /** Advances the timer; `true` once it has finished. */

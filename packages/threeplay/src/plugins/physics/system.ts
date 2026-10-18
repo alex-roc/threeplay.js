@@ -1,12 +1,12 @@
 import { Quaternion, Vector3 } from "three";
-import { deg2rad, rad2deg } from "../../core/math";
-import type { GameObj } from "../../core/types";
-import type { Vec3Like } from "../transform/types";
-import { buildCollider } from "./collider";
-import { ContactTracker } from "./contacts";
-import type { RapierBackend } from "./rapier";
-import { createState, isSensorOf, kindOf, type PhysState } from "./state";
-import type { RaycastHit, RaycastOpts } from "./types";
+import { deg2rad, rad2deg } from "../../core/math.js";
+import type { GameObj } from "../../core/types.js";
+import type { Vec3Like } from "../transform/types.js";
+import { buildCollider } from "./collider.js";
+import { ContactTracker } from "./contacts.js";
+import type { RapierBackend } from "./rapier.js";
+import { createState, isSensorOf, kindOf, type PhysState } from "./state.js";
+import type { RaycastHit, RaycastOpts } from "./types.js";
 
 const _p = new Vector3();
 const _q = new Quaternion();

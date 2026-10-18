@@ -1,12 +1,19 @@
 import { Color, Vector2 } from "three";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { renderPlugin } from "../render";
-import { shapesPlugin } from "../shapes";
-import { transformPlugin } from "../transform";
-import { hudPlugin } from ".";
-import { ANCHORS, applyFrame, cssColor, type HudState, hudTransform, isAnchor } from "./placement";
+import { createEngine } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { renderPlugin } from "../render/index.js";
+import { shapesPlugin } from "../shapes/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { hudPlugin } from "./index.js";
+import {
+  ANCHORS,
+  applyFrame,
+  cssColor,
+  type HudState,
+  hudTransform,
+  isAnchor,
+} from "./placement.js";
 
 describe("placement", () => {
   it("anchors translate the element by a fraction of its own size", () => {

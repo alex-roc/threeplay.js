@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { Comp, GameObj } from "../../core/types";
+import type { Comp, GameObj } from "../../core/types.js";
 
 /** Something that has a position: a vector or a game object with `pos`. */
 export type Vec3Like = THREE.Vector3 | { x: number; y: number; z: number };
@@ -79,7 +79,7 @@ export interface TransformAPI {
   follow(target: GameObj | null, offset?: Vec3Like): FollowComp;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     transform: TransformAPI;
   }

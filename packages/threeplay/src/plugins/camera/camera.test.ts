@@ -1,12 +1,18 @@
 import { Vector2, Vector3 } from "three";
 import { describe, expect, it } from "vitest";
-import { createEngine, definePlugin } from "../../core/engine";
-import type { Engine, PluginLike } from "../../core/types";
-import type { InputAPI } from "../input/types";
-import { renderPlugin } from "../render";
-import { transformPlugin } from "../transform";
-import { cameraPlugin } from ".";
-import { horizontalForward, offsetAngles, orbitOffset, smoothFactor, yawOfDirection } from "./math";
+import { createEngine, definePlugin } from "../../core/engine.js";
+import type { Engine, PluginLike } from "../../core/types.js";
+import type { InputAPI } from "../input/types.js";
+import { renderPlugin } from "../render/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { cameraPlugin } from "./index.js";
+import {
+  horizontalForward,
+  offsetAngles,
+  orbitOffset,
+  smoothFactor,
+  yawOfDirection,
+} from "./math.js";
 
 /** Mouse state the camera reads, controlled by the tests. */
 interface FakeMouse {
@@ -419,7 +425,7 @@ describe("camShake", () => {
 
 describe("with the real input plugin", () => {
   it("runs a first-person controller headless and inputDir follows its yaw", async () => {
-    const { inputPlugin } = await import("../input");
+    const { inputPlugin } = await import("../input/index.js");
     const k = createEngine({ loop: "manual", renderer: "none" }, [
       renderPlugin,
       transformPlugin,

@@ -1,5 +1,5 @@
 import { Color, SRGBColorSpace, Vector2, Vector3 } from "three";
-import type { ColorLike, Tweenable } from "./types";
+import type { ColorLike, Tweenable } from "./types.js";
 
 /**
  * A 3D vector (a `THREE.Vector3`). `vec3()` is (0,0,0), `vec3(1)` is (1,1,1),

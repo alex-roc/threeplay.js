@@ -1,8 +1,11 @@
 name: Site
 
-# Manual for now: enable GitHub Pages (Settings > Pages > Source: GitHub Actions) and
-# add `push: branches: [main]` here to deploy on every merge.
+# Deploys the site to GitHub Pages (Settings > Pages > Source: GitHub Actions) on
+# every push to main that touches the engine, the examples or the site.
 on:
+  push:
+    branches: [main]
+    paths: ["packages/**", "examples/**", "site/**", ".github/workflows/site.yml"]
   workflow_dispatch:
 
 permissions:

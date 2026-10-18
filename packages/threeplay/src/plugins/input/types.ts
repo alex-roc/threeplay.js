@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { EventController, GameObj, Tag } from "../../core/types";
+import type { EventController, GameObj, Tag } from "../../core/types.js";
 
 /**
  * Key names, kaplay style: letters and digits as typed (`"a"`, `"1"`), plus
@@ -186,7 +186,7 @@ export interface InputAPI {
   ): THREE.Vector3;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     input: InputAPI;
   }

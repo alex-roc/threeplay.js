@@ -1,6 +1,6 @@
-import { clamp } from "../../core/math";
-import { self } from "../../core/util";
-import type { HealthComp } from "./types";
+import { clamp } from "../../core/math.js";
+import { self } from "../../core/util.js";
+import type { HealthComp } from "./types.js";
 
 /** Builds the `health()` component. Events go through the object's own events. */
 export function createHealth(hp: number, maxHp: number = hp): HealthComp {

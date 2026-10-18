@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { Easing, mathAPI } from "./math";
+import type { Easing, mathAPI } from "./math.js";
 
 // ---------------------------------------------------------------------------
 // Events

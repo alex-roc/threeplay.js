@@ -2,6 +2,11 @@
 
 **kaplay's simplicity, three.js power.** A tiny, friendly 3D game engine for the browser.
 
+[Website & docs](https://alex-roc.github.io/threeplay.js/) ·
+[Examples](https://alex-roc.github.io/threeplay.js/examples/) ·
+[Playground](https://alex-roc.github.io/threeplay.js/playground/) ·
+[npm](https://www.npmjs.com/package/threeplay)
+
 ```js
 import threeplay from "threeplay";
 
@@ -18,9 +23,6 @@ scene("game", () => {
 go("game");
 ```
 
-> 🚧 Work in progress — the first release (0.1) is being built. See
-> [`dev-docs/architecture.md`](dev-docs/architecture.md) and [CONTRIBUTING](CONTRIBUTING.md).
-
 ## Why
 
 There are great 3D engines for the web (Babylon.js, PlayCanvas) and great 3D
@@ -31,6 +33,47 @@ of [three.js](https://threejs.org) (WebGPU with WebGL2 fallback) and
 [Rapier](https://rapier.rs) physics — with the full power of both one property away
 (`obj.object3d`, `k.renderer`, `k.physics.world`).
 
+## Install
+
+With a bundler:
+
+```sh
+npm install threeplay three
+```
+
+Without one, a single HTML file is enough (the standalone build bundles three.js;
+Rapier is downloaded only if the game uses physics):
+
+```html
+<script type="importmap">
+  { "imports": { "threeplay": "https://cdn.jsdelivr.net/npm/threeplay@0.1/dist/standalone/threeplay.mjs" } }
+</script>
+<script type="module">
+  import threeplay from "threeplay";
+  threeplay();
+  add([box(1, 1, 1), pos(0, 0.5, 0), rotate(0, 30, 0), color("tomato")]);
+  orbitCamera({ distance: 5, autoRotate: 20 });
+</script>
+```
+
+Start with the [getting started guide](https://alex-roc.github.io/threeplay.js/getting-started/).
+
+## What's inside
+
+- Game objects made of components and tags, scenes, events, timers and tweens.
+- Primitive shapes, glTF models with animations, lights, fog and shadows.
+- Rapier physics: sensors, static/kinematic/dynamic bodies, a character controller, raycasts.
+- Keyboard, mouse, pointer lock, touch and gamepad through virtual buttons.
+- Cameras: follow, first person, third person, orbit, top-down, shake.
+- A DOM HUD, ASCII levels, audio (with positional sound and synthesized beeps), health, state
+  machines and a debug inspector.
+- A small core where everything else is a plugin: write your own with the same API.
+
+## Contributing
+
+Issues and pull requests are welcome. Read [CONTRIBUTING](https://github.com/alex-roc/threeplay.js/blob/main/CONTRIBUTING.md)
+and [`dev-docs/architecture.md`](https://github.com/alex-roc/threeplay.js/blob/main/dev-docs/architecture.md).
+
 ## License
 
-MIT
+MIT © Alex Ojeda Copa

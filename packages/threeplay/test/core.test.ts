@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Comp, Engine, GameObj, PluginLike } from "../src";
-import { createEngine, definePlugin } from "../src";
+import type { Comp, Engine, GameObj, PluginLike } from "../src/index.js";
+import { createEngine, definePlugin } from "../src/index.js";
 
 const make = (plugins: PluginLike[] = []) => createEngine({ loop: "manual" }, plugins);
 
@@ -325,7 +325,7 @@ describe("review fixes", () => {
   });
 
   it("rgb() 0–255 and arrays are sRGB like hex strings", async () => {
-    const { rgb } = await import("../src");
+    const { rgb } = await import("../src/index.js");
     expect(rgb(128, 128, 128).getHexString()).toBe("808080");
     expect(rgb([255, 120, 0]).getHexString()).toBe(rgb("#ff7800").getHexString());
   });

@@ -1,6 +1,6 @@
 import type * as THREE from "three";
-import type { GameObj } from "../../core/types";
-import type { PosTarget, Vec3Like } from "../transform/types";
+import type { GameObj } from "../../core/types.js";
+import type { PosTarget, Vec3Like } from "../transform/types.js";
 
 /** The active camera behavior. Starting a new one stops the previous one. */
 export interface CameraController {
@@ -143,7 +143,7 @@ export interface CameraAPI {
   getCameraController(): CameraController | null;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     camera: CameraAPI;
   }

@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { renderPlugin } from "../render";
-import { transformPlugin } from "../transform";
-import { levelPlugin } from ".";
-import { makeGrid, tileAt, tileCenter } from "./grid";
+import { createEngine } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { renderPlugin } from "../render/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { makeGrid, tileAt, tileCenter } from "./grid.js";
+import { levelPlugin } from "./index.js";
 
 const make = () =>
   createEngine({ loop: "manual", renderer: "none" }, [

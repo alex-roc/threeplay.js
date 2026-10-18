@@ -1,4 +1,4 @@
-import type { Engine } from "./core/types";
+import type { Engine } from "./core/types.js";
 
 // Names that must never be overwritten on `window`.
 const PROTECTED = new Set([

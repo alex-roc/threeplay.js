@@ -1,11 +1,11 @@
 import { Color, Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import type { Engine, GameObj } from "../../core/types";
-import { self } from "../../core/util";
-import { applyFrame, type HudState, isAnchor } from "./placement";
-import type { Anchor, HudAPI, RectOpts, TextComp, TextOpts, UIRectComp } from "./types";
+import { definePlugin } from "../../core/engine.js";
+import type { Engine, GameObj } from "../../core/types.js";
+import { self } from "../../core/util.js";
+import { applyFrame, type HudState, isAnchor } from "./placement.js";
+import type { Anchor, HudAPI, RectOpts, TextComp, TextOpts, UIRectComp } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /** Readable over any 3D background: a thin dark outline plus a soft drop shadow. */
 const OUTLINE =

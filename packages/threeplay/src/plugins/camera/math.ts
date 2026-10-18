@@ -1,5 +1,5 @@
 import { Vector3 } from "three";
-import { deg2rad, rad2deg } from "../../core/math";
+import { deg2rad, rad2deg } from "../../core/math.js";
 
 /**
  * Frame-rate independent smoothing factor: the fraction of the remaining

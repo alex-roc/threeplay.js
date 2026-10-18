@@ -1,7 +1,7 @@
 import type { Collider, KinematicCharacterController, RigidBody } from "@dimforge/rapier3d-compat";
 import { Quaternion, Vector3 } from "three";
-import type { GameObj } from "../../core/types";
-import type { AreaOpts, BodyOpts, CharacterOpts, Collision } from "./types";
+import type { GameObj } from "../../core/types.js";
+import type { AreaOpts, BodyOpts, CharacterOpts, Collision } from "./types.js";
 
 /** What kind of Rapier body an object gets, derived from its components. */
 export type BodyKind = "area" | "static" | "kinematic" | "dynamic" | "character";

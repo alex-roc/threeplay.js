@@ -1,6 +1,6 @@
 {
   "name": "threeplay",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "A tiny, kaplay-style 3D game engine on top of three.js and Rapier.",
   "keywords": [
     "game engine",
@@ -41,7 +41,9 @@
   "files": [
     "dist",
     "types",
-    "README.md"
+    "README.md",
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "build": "vite build && vite build --config vite.standalone.config.ts && tsc -p tsconfig.build.json && node scripts/gen-global.mjs",

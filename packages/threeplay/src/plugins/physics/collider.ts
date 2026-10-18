@@ -1,9 +1,9 @@
 import type { ColliderDesc } from "@dimforge/rapier3d-compat";
 import { Box3, type BufferGeometry, Matrix4, type Mesh, type Object3D, Vector3 } from "three";
-import type { GameObj } from "../../core/types";
-import type { ShapeDesc } from "../shapes/types";
-import type { Rapier } from "./rapier";
-import type { AreaOpts } from "./types";
+import type { GameObj } from "../../core/types.js";
+import type { ShapeDesc } from "../shapes/types.js";
+import type { Rapier } from "./rapier.js";
+import type { AreaOpts } from "./types.js";
 
 /** A collider description plus what the plugin needs to know about it. */
 export interface BuiltCollider {

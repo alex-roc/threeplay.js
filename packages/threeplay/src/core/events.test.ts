@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { HandlerList, Scope } from "./events";
+import { HandlerList, Scope } from "./events.js";
 
 describe("Scope", () => {
   it("forgets controllers once they are cancelled", () => {

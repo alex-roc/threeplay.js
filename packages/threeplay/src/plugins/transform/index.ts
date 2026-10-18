@@ -1,8 +1,8 @@
 import { Euler, Matrix4, Quaternion, Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import { deg2rad, rad2deg } from "../../core/math";
-import type { Engine, GameObj } from "../../core/types";
-import { self, targetPos, toVec3 } from "../../core/util";
+import { definePlugin } from "../../core/engine.js";
+import { deg2rad, rad2deg } from "../../core/math.js";
+import type { Engine, GameObj } from "../../core/types.js";
+import { self, targetPos, toVec3 } from "../../core/util.js";
 import type {
   FollowComp,
   PosComp,
@@ -11,9 +11,9 @@ import type {
   ScaleComp,
   TransformAPI,
   Vec3Like,
-} from "./types";
+} from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 const UP = new Vector3(0, 1, 0);
 const _m = new Matrix4();

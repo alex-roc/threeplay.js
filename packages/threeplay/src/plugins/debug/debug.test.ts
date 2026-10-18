@@ -1,15 +1,15 @@
 import { BoxGeometry, Mesh, MeshBasicMaterial, Ray, Vector2, Vector3 } from "three";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine, PluginLike } from "../../core/types";
-import { physicsPlugin } from "../physics";
-import { renderPlugin } from "../render";
-import { transformPlugin } from "../transform";
-import { debugPlugin } from ".";
-import { FpsMeter } from "./fps";
-import { describeObject } from "./inspect";
-import { formatMessage, LogBuffer } from "./log";
-import { DebugUI } from "./panel";
+import { createEngine } from "../../core/engine.js";
+import type { Engine, PluginLike } from "../../core/types.js";
+import { physicsPlugin } from "../physics/index.js";
+import { renderPlugin } from "../render/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { FpsMeter } from "./fps.js";
+import { debugPlugin } from "./index.js";
+import { describeObject } from "./inspect.js";
+import { formatMessage, LogBuffer } from "./log.js";
+import { DebugUI } from "./panel.js";
 
 /** Stands in for the input plugin: records the keys the debug plugin listens to. */
 function fakeInput(presses: Array<{ key: string; fn: () => void }>): PluginLike {

@@ -1,6 +1,6 @@
 import type * as THREE from "three";
-import type { Comp, CompList, GameObj, MergeComps } from "../../core/types";
-import type { PosComp } from "../transform/types";
+import type { Comp, CompList, GameObj, MergeComps } from "../../core/types.js";
+import type { PosComp } from "../transform/types.js";
 
 /** Options of `addLevel()`. */
 export interface LevelOpts {
@@ -68,7 +68,7 @@ export interface LevelAPI {
   addLevel(map: string[], opts: LevelOpts): LevelObj;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     level: LevelAPI;
   }

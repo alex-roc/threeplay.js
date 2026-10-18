@@ -10,8 +10,8 @@ import {
   RepeatWrapping,
   type Texture,
 } from "three";
-import { toColor } from "../../core/math";
-import type { MaterialOpts } from "./types";
+import { toColor } from "../../core/math.js";
+import type { MaterialOpts } from "./types.js";
 
 /** Default material of the primitives. */
 export function defaultMaterial(): MeshStandardMaterial {

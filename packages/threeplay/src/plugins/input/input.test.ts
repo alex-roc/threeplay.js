@@ -1,14 +1,14 @@
 import { Vector3 } from "three";
 import { afterEach, describe, expect, it } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { renderPlugin } from "../render";
-import { transformPlugin } from "../transform";
-import { inputPlugin } from ".";
-import { inputToWorld } from "./dir";
-import { applyDeadZone, readGamepads } from "./gamepad";
-import { normalizeKey, shouldPreventDefault } from "./keys";
-import { isBindingDown, PressState } from "./state";
+import { createEngine } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { renderPlugin } from "../render/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { inputToWorld } from "./dir.js";
+import { applyDeadZone, readGamepads } from "./gamepad.js";
+import { inputPlugin } from "./index.js";
+import { normalizeKey, shouldPreventDefault } from "./keys.js";
+import { isBindingDown, PressState } from "./state.js";
 
 const make = (opts: Record<string, unknown> = {}) =>
   createEngine({ loop: "manual", renderer: "none", ...opts }, [

@@ -1,4 +1,4 @@
-import type { EventController } from "./types";
+import type { EventController } from "./types.js";
 
 type Handler = (...args: any[]) => void;
 

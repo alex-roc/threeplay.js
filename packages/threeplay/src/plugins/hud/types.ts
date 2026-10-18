@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { Comp } from "../../core/types";
+import type { Comp } from "../../core/types.js";
 
 /** Where a HUD element's `pos` sits on the element. */
 export type Anchor =
@@ -67,7 +67,7 @@ export interface HudAPI {
   worldToHud(world: THREE.Vector3): THREE.Vector2 | null;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     hud: HudAPI;
   }

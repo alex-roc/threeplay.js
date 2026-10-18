@@ -1,4 +1,4 @@
-import type { BackendOpts, RendererBackend } from "../types";
+import type { BackendOpts, RendererBackend } from "../types.js";
 
 /** Headless backend: no canvas, `render` does nothing. Used in Node and tests. */
 export function createNoneBackend(_opts: BackendOpts): RendererBackend {

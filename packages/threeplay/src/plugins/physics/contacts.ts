@@ -1,6 +1,6 @@
 import type { Vector3 } from "three";
-import type { Pair, PhysState } from "./state";
-import type { Collision } from "./types";
+import type { Pair, PhysState } from "./state.js";
+import type { Collision } from "./types.js";
 
 /** What the tracker needs from the physics system. */
 export interface ContactSource {

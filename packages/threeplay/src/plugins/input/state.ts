@@ -1,5 +1,5 @@
-import { normalizeKey, toList } from "./keys";
-import type { ButtonBinding, GamepadButton, Key, MouseButton } from "./types";
+import { normalizeKey, toList } from "./keys.js";
+import type { ButtonBinding, GamepadButton, Key, MouseButton } from "./types.js";
 
 /**
  * The down / pressed / released state machine behind keys, mouse buttons,

@@ -150,8 +150,8 @@ const compare: {
     cells: [
       {
         verdict: "some",
-        label: "About 250 KB gzip",
-        note: "Plus Rapier, about 1.6 MB, loaded on demand.",
+        label: "250–410 KB gzip",
+        note: "With three.js: ~250 KB on WebGL, ~410 KB with WebGPU. Rapier (~1.6 MB) only downloads if the game uses physics.",
       },
       { verdict: "yes", label: "Smallest", note: "Tree-shakes down to what you use." },
       { verdict: "some", label: "Small", note: "three.js plus React and the renderer." },
@@ -166,7 +166,11 @@ const compare: {
       { verdict: "yes", label: "Huge", note: "The reference for web 3D." },
       { verdict: "yes", label: "Large", note: "Actively maintained by the pmndrs collective." },
       { verdict: "yes", label: "Large", note: "Backed by a big team and a visual editor." },
-      { verdict: "some", label: "Quiet", note: "Releases are infrequent. Check the repo." },
+      {
+        verdict: "no",
+        label: "Quiet",
+        note: "Last release March 2025 (0.26.1), pinned to three.js r171.",
+      },
     ],
   },
 ];

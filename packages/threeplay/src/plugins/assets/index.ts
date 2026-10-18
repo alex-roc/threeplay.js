@@ -1,11 +1,11 @@
 import { RepeatWrapping, SRGBColorSpace, type Texture, TextureLoader } from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
-import { definePlugin } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { createModel, listNames } from "./model";
-import type { AssetsAPI, ModelData } from "./types";
+import { definePlugin } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { createModel, listNames } from "./model.js";
+import type { AssetsAPI, ModelData } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /** Built-in plugin: `loadModel`, `loadTexture`, `model()` and friends. */
 export const assetsPlugin = definePlugin<AssetsAPI>({

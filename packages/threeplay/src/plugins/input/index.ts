@@ -1,20 +1,20 @@
 import { type Object3D, Raycaster, Vector2, Vector3 } from "three";
-import { definePlugin } from "../../core/engine";
-import type { Engine, EventController, GameObj, Tag } from "../../core/types";
-import { gameObjOf } from "../../core/util";
-import { horizontalForward, inputToWorld } from "./dir";
-import { type GamepadLike, readGamepads } from "./gamepad";
+import { definePlugin } from "../../core/engine.js";
+import type { Engine, EventController, GameObj, Tag } from "../../core/types.js";
+import { gameObjOf } from "../../core/util.js";
+import { horizontalForward, inputToWorld } from "./dir.js";
+import { type GamepadLike, readGamepads } from "./gamepad.js";
 import {
   DEFAULT_BUTTONS,
   mouseButtonName,
   normalizeKey,
   shouldPreventDefault,
   toList,
-} from "./keys";
-import { hasAny, isBindingDown, PressState } from "./state";
-import type { ButtonBinding, GamepadButton, InputAPI, Key, MouseButton } from "./types";
+} from "./keys.js";
+import { hasAny, isBindingDown, PressState } from "./state.js";
+import type { ButtonBinding, GamepadButton, InputAPI, Key, MouseButton } from "./types.js";
 
-export type * from "./types";
+export type * from "./types.js";
 
 /** Counts live listeners of an event so the expensive work (raycasts) can be skipped without any. */
 interface ListenerCount {

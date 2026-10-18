@@ -1,6 +1,6 @@
 import type * as THREE from "three";
-import type { Comp, EventController, GameObj, Tag } from "../../core/types";
-import type { MoveHandler, Vec3Like } from "../transform/types";
+import type { Comp, EventController, GameObj, Tag } from "../../core/types.js";
+import type { MoveHandler, Vec3Like } from "../transform/types.js";
 
 /** A contact between two objects, as seen from one of them. */
 export interface Collision {
@@ -215,7 +215,7 @@ export interface PhysicsAPI {
   onCollideEnd(tagA: Tag, tagB: Tag, fn: (a: GameObj, b: GameObj) => void): EventController;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     physics: PhysicsAPI;
   }

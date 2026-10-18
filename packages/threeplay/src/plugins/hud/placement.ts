@@ -1,5 +1,5 @@
 import type { Color } from "three";
-import type { Anchor } from "./types";
+import type { Anchor } from "./types.js";
 
 /** Fraction of the element's size that `pos` is offset by, per anchor: `[x, y]`. */
 export const ANCHORS: Record<Anchor, readonly [number, number]> = {

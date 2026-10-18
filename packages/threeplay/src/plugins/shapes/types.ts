@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { ColorLike, Comp } from "../../core/types";
+import type { ColorLike, Comp } from "../../core/types.js";
 
 /**
  * Describes the geometry of an object so other plugins (physics colliders,
@@ -103,7 +103,7 @@ export interface ShapesAPI {
   ): Comp & { id: "material"; material: THREE.Material };
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     shapes: ShapesAPI;
   }

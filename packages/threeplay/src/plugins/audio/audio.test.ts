@@ -1,9 +1,9 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { createEngine } from "../../core/engine";
-import type { Engine } from "../../core/types";
-import { renderPlugin } from "../render";
-import { transformPlugin } from "../transform";
-import { audioPlugin } from ".";
+import { createEngine } from "../../core/engine.js";
+import type { Engine } from "../../core/types.js";
+import { renderPlugin } from "../render/index.js";
+import { transformPlugin } from "../transform/index.js";
+import { audioPlugin } from "./index.js";
 
 // --- a minimal WebAudio fake: just enough to observe what the plugin does ---
 

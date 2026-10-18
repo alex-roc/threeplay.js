@@ -1,5 +1,5 @@
-import type { GameObj } from "../../core/types";
-import type { Vec3Like } from "../transform/types";
+import type { GameObj } from "../../core/types.js";
+import type { Vec3Like } from "../transform/types.js";
 
 /** Options of `play()`. */
 export interface PlayOpts {
@@ -79,7 +79,7 @@ export interface AudioAPI {
   volume(v?: number): number;
 }
 
-declare module "../../core/types" {
+declare module "../../core/types.js" {
   interface PluginRegistry {
     audio: AudioAPI;
   }

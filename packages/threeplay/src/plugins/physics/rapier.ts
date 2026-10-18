@@ -1,6 +1,6 @@
 import type { EventQueue, World } from "@dimforge/rapier3d-compat";
 import { Vector3 } from "three";
-import type { PhysicsBackend } from "./types";
+import type { PhysicsBackend } from "./types.js";
 
 /** The Rapier module (`import("@dimforge/rapier3d-compat")`). */
 export type Rapier = typeof import("@dimforge/rapier3d-compat");

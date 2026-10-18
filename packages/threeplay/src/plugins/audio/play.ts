@@ -1,6 +1,6 @@
-import { clamp } from "../../core/math";
-import { isGameObj, targetPos } from "../../core/util";
-import type { AudioPlay, PlayOpts } from "./types";
+import { clamp } from "../../core/math.js";
+import { isGameObj, targetPos } from "../../core/util.js";
+import type { AudioPlay, PlayOpts } from "./types.js";
 
 /** Sets a (possibly legacy) AudioParam-or-method triple, e.g. a panner's position. */
 export function setXYZ(

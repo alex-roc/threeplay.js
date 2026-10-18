@@ -1,6 +1,6 @@
-import { EventEmitter } from "../../core/events";
-import { self } from "../../core/util";
-import type { StateComp } from "./types";
+import { EventEmitter } from "../../core/events.js";
+import { self } from "../../core/util.js";
+import type { StateComp } from "./types.js";
 
 /** Builds the `state()` component: a small finite state machine. */
 export function createState(initial: string, allowed?: string[]): StateComp {
