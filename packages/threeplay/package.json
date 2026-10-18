@@ -44,7 +44,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "vite build && vite build --config vite.standalone.config.ts && tsc -p tsconfig.build.json",
+    "build": "vite build && vite build --config vite.standalone.config.ts && tsc -p tsconfig.build.json && node scripts/gen-global.mjs",
     "dev": "vite build --watch",
     "test": "vitest run",
     "test:watch": "vitest",
