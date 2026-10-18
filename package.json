@@ -1,0 +1,25 @@
+{
+  "name": "threeplay-monorepo",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@11.17.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "vite examples --config examples/vite.config.ts",
+    "build": "pnpm --filter threeplay build",
+    "test": "pnpm --filter threeplay test",
+    "typecheck": "pnpm --filter threeplay typecheck",
+    "lint": "biome check .",
+    "format": "biome check --write .",
+    "smoke": "node scripts/smoke.mjs",
+    "changeset": "changeset",
+    "site:dev": "pnpm --filter site dev",
+    "site:build": "pnpm --filter site build"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.15",
+    "@changesets/cli": "^3.0.3"
+  }
+}

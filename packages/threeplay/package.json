@@ -1,0 +1,67 @@
+{
+  "name": "threeplay",
+  "version": "0.0.0",
+  "description": "A tiny, kaplay-style 3D game engine on top of three.js and Rapier.",
+  "keywords": [
+    "game engine",
+    "3d",
+    "three.js",
+    "threejs",
+    "kaplay",
+    "kaboom",
+    "rapier",
+    "webgpu",
+    "gamedev"
+  ],
+  "license": "MIT",
+  "author": "Alex Ojeda Copa",
+  "homepage": "https://alex-roc.github.io/threeplay.js/",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alex-roc/threeplay.js.git",
+    "directory": "packages/threeplay"
+  },
+  "bugs": "https://github.com/alex-roc/threeplay.js/issues",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/threeplay.js",
+  "module": "./dist/threeplay.js",
+  "types": "./dist/types/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/index.d.ts",
+      "default": "./dist/threeplay.js"
+    },
+    "./global": {
+      "types": "./types/global.d.ts"
+    },
+    "./standalone": "./dist/standalone/threeplay.mjs",
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "types",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "vite build && vite build --config vite.standalone.config.ts && tsc -p tsconfig.build.json",
+    "dev": "vite build --watch",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "three": ">=0.186.0"
+  },
+  "dependencies": {
+    "@dimforge/rapier3d-compat": "0.21.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.19.2",
+    "@types/three": "0.186.0",
+    "three": "0.186.1",
+    "typescript": "6.0.3",
+    "vite": "^8.3.4",
+    "vitest": "^5.0.5"
+  }
+}
