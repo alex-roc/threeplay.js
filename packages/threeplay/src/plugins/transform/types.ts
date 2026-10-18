@@ -55,7 +55,9 @@ export interface RotateComp extends Comp {
 export interface ScaleComp extends Comp {
   id: "scale";
   /** Local scale (it *is* `object3d.scale`). */
-  scale: THREE.Vector3;
+  get scale(): THREE.Vector3;
+  /** Accepts a vector or a number (uniform). */
+  set scale(v: THREE.Vector3 | number);
   scaleTo(x: number, y?: number, z?: number): void;
 }
 

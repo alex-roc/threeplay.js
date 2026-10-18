@@ -62,7 +62,9 @@ export class GameObjImpl implements GameObjRaw {
     this.object3d.visible = !h;
   }
 
-  add<T extends CompList>(comps: T = [] as unknown as T): GameObj<MergeComps<T[number]>> {
+  add<T extends CompList>(
+    comps: readonly [...T] = [] as unknown as readonly [...T],
+  ): GameObj<MergeComps<T[number]>> {
     const child = new GameObjImpl(this._ctx);
     for (const c of comps) child._use(c);
     for (const entry of child._comps) child._checkRequire(entry.comp);
@@ -136,6 +138,12 @@ export class GameObjImpl implements GameObjRaw {
     if (dependent) {
       throw new Error(`Can't remove component "${id}": component "${dependent.key}" requires it.`);
     }
+    this._remove(id);
+  }
+
+  private _remove(id: string) {
+    const i = this._comps.findIndex((e) => e.key === id);
+    if (i < 0) return;
     const [entry] = this._comps.splice(i, 1);
     entry.comp.destroy?.call(this as any);
     for (const p of entry.props) delete (this as any)[p];
@@ -183,16 +191,24 @@ export class GameObjImpl implements GameObjRaw {
   /** @internal Runs `update` on this object and its subtree. */
   _update() {
     if (this.paused || !this._alive) return;
-    for (const e of this._comps) e.comp.update?.call(this as any);
+    for (const e of this._comps) {
+      e.comp.update?.call(this as any);
+      if (!this._alive) return; // destroyed by one of its own components
+    }
     this.trigger("update");
+    if (!this._alive || this.children.length === 0) return;
     for (const child of this.children.slice()) (child as unknown as GameObjImpl)._update();
   }
 
   /** @internal Runs `fixedUpdate` on this object and its subtree. */
   _fixedUpdate() {
     if (this.paused || !this._alive) return;
-    for (const e of this._comps) e.comp.fixedUpdate?.call(this as any);
+    for (const e of this._comps) {
+      e.comp.fixedUpdate?.call(this as any);
+      if (!this._alive) return; // destroyed by one of its own components
+    }
     this.trigger("fixedUpdate");
+    if (!this._alive || this.children.length === 0) return;
     for (const child of this.children.slice()) (child as unknown as GameObjImpl)._fixedUpdate();
   }
 
@@ -233,7 +249,7 @@ export class GameObjImpl implements GameObjRaw {
     }
     const c = comp as Comp;
     const key = c.id ?? `anonymous#${anonId++}`;
-    if (c.id && this.has(c.id)) this.unuse(c.id);
+    if (c.id && this.has(c.id)) this._remove(c.id); // replacement: dependents keep working
 
     const props: string[] = [];
     const descs = Object.getOwnPropertyDescriptors(c);

@@ -104,7 +104,6 @@ export function createEngine(opts: ThreeplayOpts = {}, plugins: PluginLike[] = [
       hooks.emit("sceneLeave", currentScene);
       sceneLeave.emit(name);
     }
-    sceneLeave.clear();
     sceneScope?.dispose();
     for (const child of root.children.slice()) child.destroy();
     accumulator = 0;
@@ -196,6 +195,7 @@ export function createEngine(opts: ThreeplayOpts = {}, plugins: PluginLike[] = [
       rootImpl._update();
       updateList.emit();
       hooks.emit("afterUpdate", dt);
+      hooks.emit("lateUpdate", dt);
     }
     const step = fixedStep * timeScale;
     hooks.emit("render", step > 0 ? accumulator / step : 0);
@@ -212,7 +212,7 @@ export function createEngine(opts: ThreeplayOpts = {}, plugins: PluginLike[] = [
     plugins: pluginAPIs,
     ...mathAPI,
 
-    add<T extends CompList>(comps?: T) {
+    add<T extends CompList>(comps?: readonly [...T]) {
       return root.add(comps);
     },
     destroy(obj: GameObj) {
@@ -261,7 +261,7 @@ export function createEngine(opts: ThreeplayOpts = {}, plugins: PluginLike[] = [
       return loadList.add(fn);
     },
     onSceneLeave(fn: (next: string) => void) {
-      return sceneLeave.add(fn);
+      return track(sceneLeave.add(fn));
     },
 
     scene(name: string, def: SceneDef) {
@@ -400,7 +400,16 @@ export function createEngine(opts: ThreeplayOpts = {}, plugins: PluginLike[] = [
       if (!running) return;
       const dt = (now - last) / 1000;
       last = now;
-      core.step(dt);
+      try {
+        core.step(dt);
+      } catch (err) {
+        // Stop instead of freezing silently or spamming the same error every
+        // frame; plugins (render) show it on screen through the hook.
+        running = false;
+        console.error("[threeplay] the game stopped because of an error:", err);
+        hooks.emit("error", err);
+        return;
+      }
       rafId = requestAnimationFrame(tick);
     };
     rafId = requestAnimationFrame(tick);

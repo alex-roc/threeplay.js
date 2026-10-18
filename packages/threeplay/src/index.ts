@@ -27,7 +27,7 @@ export interface ThreeplayInit extends ThreeplayOpts {
 export function threeplay(opts: ThreeplayInit = {}): Engine {
   const plugins = [...(opts.core ?? defaultPlugins), ...(opts.plugins ?? [])];
   const k = createEngine(opts, plugins);
-  if (opts.global ?? true) installGlobals(k);
+  if (opts.global ?? true) k.onQuit(installGlobals(k));
   return k;
 }
 

@@ -15,6 +15,7 @@
     "format": "biome check --write .",
     "smoke": "node scripts/smoke.mjs",
     "changeset": "changeset",
+    "thumbs": "pnpm smoke && node site/scripts/copy-thumbs.mjs",
     "site:dev": "pnpm --filter site dev",
     "site:build": "pnpm --filter site build"
   },

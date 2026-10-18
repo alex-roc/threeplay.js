@@ -1,4 +1,4 @@
-import { Color, Vector2, Vector3 } from "three";
+import { Color, SRGBColorSpace, Vector2, Vector3 } from "three";
 import type { ColorLike, Tweenable } from "./types";
 
 /**
@@ -25,13 +25,17 @@ export function vec2(x?: number | { x: number; y: number }, y?: number) {
  */
 export function rgb(r?: ColorLike | number, g?: number, b?: number) {
   if (r === undefined) return new Color(1, 1, 1);
-  if (typeof r === "number" && g !== undefined) return new Color(r / 255, g / 255, (b ?? 0) / 255);
+  if (typeof r === "number" && g !== undefined) {
+    return new Color().setRGB(r / 255, g / 255, (b ?? 0) / 255, SRGBColorSpace);
+  }
   return toColor(r);
 }
 
 /** Normalizes a {@link ColorLike} into a new `THREE.Color`. */
 export function toColor(c: ColorLike): Color {
-  if (Array.isArray(c)) return new Color(c[0] / 255, c[1] / 255, c[2] / 255);
+  // 0–255 values are sRGB (like "#rrggbb"), not linear.
+  if (Array.isArray(c))
+    return new Color().setRGB(c[0] / 255, c[1] / 255, c[2] / 255, SRGBColorSpace);
   return new Color(c as ConstructorParameters<typeof Color>[0]);
 }
 

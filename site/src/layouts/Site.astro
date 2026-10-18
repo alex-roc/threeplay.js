@@ -1,0 +1,92 @@
+---
+// Layout of the custom pages (landing, examples, playground). The docs use Starlight's own.
+import "../styles/site.css";
+import logo from "../assets/logo.svg?raw";
+import { REPO_URL } from "../data/examples";
+import { url } from "../lib/url";
+
+interface Props {
+  title: string;
+  description?: string;
+  active?: "examples" | "playground";
+  footer?: boolean;
+  /** Fixed-height app layout (the playground): the page does not scroll. */
+  app?: boolean;
+}
+
+const {
+  title,
+  description = "A tiny, kaplay-style 3D game engine on three.js and Rapier.",
+  active,
+  footer = true,
+  app = false,
+} = Astro.props;
+
+const fullTitle =
+  title === "threeplay"
+    ? "threeplay: kaplay's simplicity, three.js power."
+    : `${title} | threeplay`;
+const nav = [
+  { key: "docs", label: "Docs", href: url("getting-started/") },
+  { key: "examples", label: "Examples", href: url("examples/") },
+  { key: "playground", label: "Playground", href: url("playground/") },
+  { key: "api", label: "API", href: url("api/") },
+  { key: "github", label: "GitHub", href: REPO_URL },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/svg+xml" href={url("favicon.svg")} />
+    <slot name="head" />
+  </head>
+  <body class:list={["site", { app }]}>
+    <header class="topbar">
+      <div class="wrap">
+        <a class="brand" href={url()} aria-label="threeplay home">
+          <Fragment set:html={logo} />
+          threeplay
+        </a>
+        <nav class="nav" aria-label="Main">
+          {
+            nav.map((n) => (
+              <a href={n.href} aria-current={n.key === active ? "page" : undefined}>
+                {n.label}
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </header>
+    <main>
+      <slot />
+    </main>
+    {
+      footer && (
+        <footer class="footer">
+          <div class="wrap">
+            <p>
+              MIT licensed. Made by <a href="https://github.com/alex-roc">Alex Ojeda Copa</a>.
+            </p>
+            <ul>
+              <li><a href={url("getting-started/")}>Docs</a></li>
+              <li><a href={url("examples/")}>Examples</a></li>
+              <li><a href={url("playground/")}>Playground</a></li>
+              <li><a href={REPO_URL}>GitHub</a></li>
+              <li><a href={`${REPO_URL}/blob/main/LICENSE`}>License</a></li>
+            </ul>
+          </div>
+        </footer>
+      )
+    }
+  </body>
+</html>

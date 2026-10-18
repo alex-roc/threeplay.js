@@ -1,0 +1,39 @@
+/* Starlight theme: same type and palette as the custom pages, kept calm for reading. */
+:root {
+  --sl-font: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  --sl-font-mono: "JetBrains Mono Variable", ui-monospace, "SF Mono", Menlo, monospace;
+  --sl-content-width: 46rem;
+
+  /* Dark theme: the orange of the logo. */
+  --sl-color-accent-low: #3d2200;
+  --sl-color-accent: #d96f00;
+  --sl-color-accent-high: #ffc680;
+}
+
+:root[data-theme="light"] {
+  /* Darker orange: enough contrast for text on white. */
+  --sl-color-accent-low: #ffe6c7;
+  --sl-color-accent: #b45309;
+  --sl-color-accent-high: #7a3a05;
+}
+
+.sl-markdown-content h1,
+.sl-markdown-content h2,
+.sl-markdown-content h3,
+h1#_top {
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+h1#_top {
+  letter-spacing: -0.03em;
+}
+
+.site-title {
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.site-title img {
+  height: 1.7rem;
+}

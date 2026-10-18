@@ -1,0 +1,416 @@
+---
+import { exampleSource, examples } from "../data/examples";
+import Site from "../layouts/Site.astro";
+import { url } from "../lib/url";
+
+const data = {
+  vendor: url("vendor/threeplay/threeplay.mjs"),
+  examples: examples.map((e) => ({ name: e.name, title: e.title, source: exampleSource(e.name) })),
+};
+// `<` is escaped so no source can close the script element early.
+const json = JSON.stringify(data).replaceAll("<", "\\u003c");
+---
+
+<Site
+  title="Playground"
+  description="Write threeplay code and run it live in the browser. Load any example, tweak it and share the link."
+  active="playground"
+  footer={false}
+  app
+>
+  <div class="pg">
+    <div class="pg-bar">
+      <button id="run" class="btn btn-primary btn-sm" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5v19L21 12z"></path></svg>
+        Run
+      </button>
+      <span class="pg-hint"><kbd>Ctrl</kbd>/<kbd>Cmd</kbd> + <kbd>Enter</kbd></span>
+      <label class="pg-select">
+        <span>Example</span>
+        <select id="examples" aria-label="Load an example"></select>
+      </label>
+      <button id="share" class="btn btn-sm" type="button">Copy link</button>
+      <span id="status" class="pg-status" role="status" aria-live="polite"></span>
+    </div>
+    <div class="pg-main">
+      <div id="editor" class="pg-editor" aria-label="Code editor"></div>
+      <div class="pg-preview">
+        <div id="stage" class="pg-stage"></div>
+        <section id="console" class="pg-console" hidden aria-label="Console">
+          <header>
+            <span>Console</span>
+            <button id="clear" type="button" class="fs-btn">Clear</button>
+          </header>
+          <ol id="console-lines"></ol>
+        </section>
+      </div>
+    </div>
+  </div>
+  <script type="application/json" id="playground-data" set:html={json} is:inline></script>
+</Site>
+
+<style is:global>
+  body.app {
+    height: 100dvh;
+    overflow: hidden;
+  }
+  .pg {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - var(--topbar-h, 3.4rem));
+    min-height: 0;
+  }
+  .pg-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem 0.9rem;
+    padding: 0.6rem 1rem;
+    background: var(--paper);
+    border-bottom: var(--border);
+  }
+  .pg-bar svg {
+    width: 0.9em;
+    height: 0.9em;
+    fill: currentColor;
+  }
+  .pg-hint {
+    font-size: 0.82rem;
+    color: var(--ink-soft);
+  }
+  .pg-hint kbd {
+    background: var(--white);
+    border: 1.5px solid var(--ink);
+    border-radius: 4px;
+    padding: 0.05em 0.35em;
+  }
+  .pg-select {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-weight: 600;
+    font-size: 0.92rem;
+  }
+  .pg-select select {
+    font: 500 0.9rem var(--font);
+    color: var(--ink);
+    background: var(--white);
+    border: 2px solid var(--ink);
+    border-radius: 8px;
+    padding: 0.4rem 0.6rem;
+    max-width: 14rem;
+  }
+  .pg-status {
+    font: 500 0.82rem var(--mono);
+    color: var(--ink-soft);
+    margin-left: auto;
+  }
+  .pg-main {
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .pg-editor {
+    min-width: 0;
+    min-height: 0;
+    background: var(--navy);
+    border-right: var(--border);
+  }
+  .pg-editor .cm-editor {
+    height: 100%;
+  }
+  .pg-editor .cm-scroller {
+    overflow: auto;
+  }
+  .pg-preview {
+    min-width: 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    background: #111;
+  }
+  .pg-stage {
+    flex: 1;
+    min-height: 0;
+    position: relative;
+  }
+  .pg-stage iframe {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+  }
+  .pg-console {
+    max-height: 32%;
+    display: flex;
+    flex-direction: column;
+    background: var(--navy);
+    color: #dbe5ff;
+    border-top: var(--border);
+    font: 400 0.8rem/1.45 var(--mono);
+  }
+  .pg-console[hidden] {
+    display: none;
+  }
+  .pg-console header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.35rem 0.75rem;
+    background: var(--navy-line);
+  }
+  .pg-console ol {
+    list-style: none;
+    margin: 0;
+    padding: 0.4rem 0.75rem;
+    overflow: auto;
+  }
+  .pg-console li {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    padding: 0.1rem 0;
+  }
+  .pg-console li.error {
+    color: #ff9aa2;
+  }
+  .pg-console li.warn {
+    color: #ffd166;
+  }
+  @media (max-width: 56rem) {
+    body.app {
+      height: auto;
+      overflow: auto;
+    }
+    .pg {
+      height: auto;
+    }
+    .pg-main {
+      grid-template-columns: minmax(0, 1fr);
+    }
+    .pg-editor {
+      height: 55dvh;
+      border-right: 0;
+      border-bottom: var(--border);
+    }
+    .pg-preview {
+      min-height: 0;
+    }
+    .pg-stage {
+      flex: none;
+      aspect-ratio: 16 / 9;
+    }
+    .pg-console {
+      max-height: 9rem;
+    }
+    .pg-status {
+      margin-left: 0;
+    }
+  }
+</style>
+
+<script>
+  import { indentWithTab } from "@codemirror/commands";
+  import { javascript } from "@codemirror/lang-javascript";
+  import { Prec } from "@codemirror/state";
+  import { oneDark } from "@codemirror/theme-one-dark";
+  import { EditorView, keymap } from "@codemirror/view";
+  import { basicSetup } from "codemirror";
+  import {
+    buildSrcdoc,
+    decodeCode,
+    encodeCode,
+    type RunnerMessage,
+    vendorUrl,
+  } from "../lib/runner";
+
+  interface PlaygroundData {
+    vendor: string;
+    examples: { name: string; title: string; source: string }[];
+  }
+
+  const STORAGE_KEY = "threeplay:playground:code";
+  const data: PlaygroundData = JSON.parse(
+    document.getElementById("playground-data")!.textContent ?? "{}",
+  );
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  const select = $<HTMLSelectElement>("examples");
+  const stage = $("stage");
+  const consoleBox = $("console");
+  const lines = $("console-lines");
+  const status = $("status");
+
+  // The topbar is sticky and wraps on narrow screens: measure it for the app height.
+  const topbar = document.querySelector<HTMLElement>(".topbar");
+  const syncTopbar = () =>
+    document.documentElement.style.setProperty("--topbar-h", `${topbar?.offsetHeight ?? 54}px`);
+  syncTopbar();
+  addEventListener("resize", syncTopbar);
+
+  const byName = (name: string | null) => data.examples.find((e) => e.name === name);
+  const matching = (code: string) => data.examples.find((e) => e.source === code);
+
+  function read(key: string): string | null {
+    try {
+      return localStorage.getItem(key);
+    } catch {
+      return null;
+    }
+  }
+
+  function initialCode(): string {
+    const hash = new URLSearchParams(location.hash.slice(1)).get("code");
+    const fromHash = hash ? decodeCode(hash) : null;
+    if (fromHash !== null) return fromHash;
+    const example = byName(new URLSearchParams(location.search).get("example"));
+    if (example) return example.source;
+    return read(STORAGE_KEY) ?? byName("hello")?.source ?? "";
+  }
+
+  // Select: every example plus a "custom" entry for edited code.
+  for (const e of data.examples) select.add(new Option(`${e.title} (${e.name})`, e.name));
+  select.add(new Option("Custom code", "custom"));
+
+  function syncSelect(code: string) {
+    select.value = matching(code)?.name ?? "custom";
+  }
+
+  let saveTimer: number | undefined;
+  function persist(code: string) {
+    try {
+      localStorage.setItem(STORAGE_KEY, code);
+    } catch {
+      // Storage can be blocked (private mode): the URL still holds the code.
+    }
+    const example = matching(code);
+    const search = example ? `?example=${example.name}` : "";
+    const hash = example ? "" : `#code=${encodeCode(code)}`;
+    history.replaceState(null, "", `${location.pathname}${search}${hash}`);
+  }
+
+  const view = new EditorView({
+    parent: $("editor"),
+    doc: initialCode(),
+    extensions: [
+      basicSetup,
+      javascript(),
+      oneDark,
+      Prec.highest(
+        EditorView.theme(
+          {
+            "&": { backgroundColor: "#0f1b33", height: "100%" },
+            ".cm-gutters": { backgroundColor: "#0f1b33", border: "none" },
+            ".cm-scroller": { fontFamily: "var(--mono)", fontSize: "0.88rem", lineHeight: "1.65" },
+          },
+          { dark: true },
+        ),
+      ),
+      keymap.of([indentWithTab]),
+      Prec.highest(
+        keymap.of([
+          {
+            key: "Mod-Enter",
+            run: () => {
+              run();
+              return true;
+            },
+          },
+        ]),
+      ),
+      EditorView.updateListener.of((update) => {
+        if (!update.docChanged) return;
+        const code = update.state.doc.toString();
+        syncSelect(code);
+        clearTimeout(saveTimer);
+        saveTimer = window.setTimeout(() => persist(code), 400);
+      }),
+    ],
+  });
+  syncSelect(view.state.doc.toString());
+
+  function setCode(code: string) {
+    view.dispatch({ changes: { from: 0, to: view.state.doc.length, insert: code } });
+    clearTimeout(saveTimer);
+    persist(code);
+    syncSelect(code);
+  }
+
+  let frame: HTMLIFrameElement | null = null;
+
+  /** Runs the code. From the button the game takes the keyboard focus; from the editor it does not. */
+  function run(focusGame = false) {
+    const code = view.state.doc.toString();
+    clearTimeout(saveTimer);
+    persist(code);
+    lines.replaceChildren();
+    consoleBox.hidden = true;
+    // A fresh iframe each time: no leftover GL context, audio or listeners.
+    frame?.remove();
+    frame = document.createElement("iframe");
+    frame.title = "Game preview";
+    frame.allow = "autoplay; gamepad; fullscreen";
+    frame.srcdoc = buildSrcdoc(code, vendorUrl(data.vendor));
+    if (focusGame) frame.addEventListener("load", () => frame?.contentWindow?.focus());
+    stage.append(frame);
+    status.textContent = "Running";
+  }
+
+  function log(level: string, text: string) {
+    consoleBox.hidden = false;
+    const li = document.createElement("li");
+    li.className = level;
+    li.textContent = text;
+    lines.append(li);
+    while (lines.childElementCount > 200) lines.firstElementChild?.remove();
+    lines.scrollTop = lines.scrollHeight;
+    if (level === "error") status.textContent = "Error: see the console";
+  }
+
+  addEventListener("message", (event: MessageEvent<RunnerMessage>) => {
+    const msg = event.data;
+    if (!msg || msg.source !== "threeplay-runner" || event.source !== frame?.contentWindow) return;
+    if (msg.type === "run") run();
+    else log(msg.level ?? "log", msg.text ?? "");
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+      e.preventDefault();
+      run();
+    }
+  });
+  $("run").addEventListener("click", () => run(true));
+  $("clear").addEventListener("click", () => {
+    lines.replaceChildren();
+    consoleBox.hidden = true;
+  });
+
+  select.addEventListener("change", () => {
+    const example = byName(select.value);
+    if (!example) return;
+    setCode(example.source);
+    run(true);
+  });
+
+  $("share").addEventListener("click", async () => {
+    persist(view.state.doc.toString());
+    try {
+      await navigator.clipboard.writeText(location.href);
+      status.textContent = "Link copied";
+    } catch {
+      status.textContent = "Copy the address bar to share";
+    }
+  });
+
+  addEventListener("hashchange", () => {
+    const hash = new URLSearchParams(location.hash.slice(1)).get("code");
+    const code = hash ? decodeCode(hash) : null;
+    if (code !== null && code !== view.state.doc.toString()) {
+      setCode(code);
+      run();
+    }
+  });
+
+  run();
+</script>

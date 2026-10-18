@@ -1,0 +1,22 @@
+---
+import { Code } from "astro:components";
+import nightOwl from "@shikijs/themes/night-owl";
+
+interface Props {
+  code: string;
+  lang?: string;
+  title?: string;
+}
+const { code, lang = "js", title } = Astro.props;
+---
+
+<div class="codebox">
+  {
+    title && (
+      <div class="codebox-title">
+        <span>{title}</span>
+      </div>
+    )
+  }
+  <Code code={code.trimEnd()} lang={lang} theme={nightOwl} />
+</div>

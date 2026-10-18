@@ -1,0 +1,322 @@
+---
+import snippetThumb from "../assets/snippet.png";
+import CodeBlock from "../components/CodeBlock.astro";
+import ExampleCard from "../components/ExampleCard.astro";
+import PlayFrame from "../components/PlayFrame.astro";
+import { examples, getExample, REPO_URL } from "../data/examples";
+import Site from "../layouts/Site.astro";
+import { url } from "../lib/url";
+
+const hero = getExample("platformer-3d");
+
+// The README snippet: it runs as is in the preview next to it.
+const snippet = `import threeplay from "threeplay";
+
+threeplay({ background: "#87ceeb" });
+
+scene("game", () => {
+  add([
+    box(20, 1, 20),
+    pos(0, -0.5, 0),
+    color("#5a5"),
+    area(),
+    body({ isStatic: true }),
+  ]);
+  const player = add([
+    capsule(0.4, 1.6),
+    pos(0, 2, 0),
+    color("#4af"),
+    area(),
+    character(),
+  ]);
+  camFollow(player);
+  onUpdate(() => player.move(inputDir().multiplyScalar(5)));
+  onKeyPress("space", () => player.isGrounded() && player.jump());
+});
+
+go("game");
+`;
+
+const features = [
+  {
+    title: "Components and tags",
+    text: "An object is a list of components and tags. Mix the built-in ones, or write your own as a plain object.",
+    code: 'add([box(), pos(0, 1, 0), color("tomato"), "enemy"])',
+  },
+  {
+    title: "Rapier physics",
+    text: "Colliders, rigid bodies and a kinematic character controller, with collide events and raycasts.",
+    code: "add([capsule(), area(), character()])",
+  },
+  {
+    title: "WebGPU, with a WebGL2 fallback",
+    text: "Uses WebGPU when the browser has it and switches to WebGL2 on its own. Force one with an option.",
+    code: 'threeplay({ renderer: "auto" })',
+  },
+  {
+    title: "Cameras that follow",
+    text: "Follow, first person, third person and orbit cameras, plus screen shake.",
+    code: "thirdPerson(player, { distance: 8 })",
+  },
+  {
+    title: "A DOM HUD",
+    text: "Text and UI are real DOM elements over the canvas, positioned in screen pixels.",
+    code: 'add([text("Coins: 0"), pos(20, 16), fixed()])',
+  },
+  {
+    title: "Levels from ASCII maps",
+    text: "Draw a level with characters. Each one becomes the components you choose.",
+    code: 'addLevel(["#####", "#@ x#"], { tiles })',
+  },
+  {
+    title: "glTF models and animations",
+    text: "Load a model once, add it as a component and cross-fade between its animations.",
+    code: 'add([model("robot")]).play("walk")',
+  },
+  {
+    title: "Plugins all the way down",
+    text: "The core knows nothing about rendering or physics. Built-in features are plugins, and so are yours.",
+    code: 'definePlugin({ name: "party", install(k) {} })',
+  },
+  {
+    title: "An escape hatch to three.js",
+    text: "Every object owns a THREE.Object3D, and Rapier's world is one property away. Nothing is hidden.",
+    code: "obj.object3d  k.renderer  k.physics.world",
+  },
+  {
+    title: "One script tag, no bundler",
+    text: "The standalone build bundles three.js and loads Rapier on demand. Import it and play.",
+    code: '<script type="module">\n  import threeplay from "./threeplay.mjs"\n</script>',
+  },
+  {
+    title: "TypeScript types",
+    text: "Typed APIs for every plugin, including the globals, so editors autocomplete your game.",
+    code: '/// <reference types="threeplay/global" />',
+  },
+];
+
+const compare: {
+  row: string;
+  cells: { verdict: "yes" | "some" | "no"; label: string; note: string }[];
+}[] = [
+  {
+    row: "Time to a playable scene",
+    cells: [
+      {
+        verdict: "yes",
+        label: "Minutes",
+        note: "One import, globals, a game loop and camera included.",
+      },
+      {
+        verdict: "no",
+        label: "Hours",
+        note: "Write the loop, input, camera and collisions yourself.",
+      },
+      {
+        verdict: "some",
+        label: "Medium",
+        note: "Declarative and neat, if you already know React.",
+      },
+      { verdict: "yes", label: "Short", note: "Complete engine, but a larger API to learn." },
+      {
+        verdict: "some",
+        label: "Medium",
+        note: "Helpful wrappers, more setup than a scripting API.",
+      },
+    ],
+  },
+  {
+    row: "Physics built in",
+    cells: [
+      { verdict: "yes", label: "Yes", note: "Rapier, wired to components." },
+      { verdict: "no", label: "No", note: "Bring your own and sync it by hand." },
+      { verdict: "some", label: "Add-on", note: "@react-three/rapier." },
+      { verdict: "yes", label: "Yes", note: "Havok and other plugins." },
+      { verdict: "yes", label: "Yes", note: "Ammo.js." },
+    ],
+  },
+  {
+    row: "Works without a framework",
+    cells: [
+      { verdict: "yes", label: "Yes", note: "Plain JavaScript in a script tag." },
+      { verdict: "yes", label: "Yes", note: "" },
+      { verdict: "no", label: "No", note: "It is a React renderer." },
+      { verdict: "yes", label: "Yes", note: "" },
+      { verdict: "yes", label: "Yes", note: "" },
+    ],
+  },
+  {
+    row: "Download size",
+    cells: [
+      {
+        verdict: "some",
+        label: "About 250 KB gzip",
+        note: "Plus Rapier, about 1.6 MB, loaded on demand.",
+      },
+      { verdict: "yes", label: "Smallest", note: "Tree-shakes down to what you use." },
+      { verdict: "some", label: "Small", note: "three.js plus React and the renderer." },
+      { verdict: "no", label: "Largest", note: "Batteries included, even tree-shaken." },
+      { verdict: "no", label: "Large", note: "three.js plus an Ammo.js build." },
+    ],
+  },
+  {
+    row: "Maturity and community",
+    cells: [
+      { verdict: "no", label: "New", note: "Pre-1.0, one maintainer, a small ecosystem." },
+      { verdict: "yes", label: "Huge", note: "The reference for web 3D." },
+      { verdict: "yes", label: "Large", note: "Actively maintained by the pmndrs collective." },
+      { verdict: "yes", label: "Large", note: "Backed by a big team and a visual editor." },
+      { verdict: "some", label: "Quiet", note: "Releases are infrequent. Check the repo." },
+    ],
+  },
+];
+const columns = ["threeplay", "three.js alone", "react-three-fiber", "Babylon.js", "enable3d"];
+---
+
+<Site title="threeplay" active={undefined}>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <p class="version-pill">pre-1.0 &middot; MIT</p>
+        <h1><span>kaplay's simplicity,</span> <span>three.js power.</span></h1>
+        <p class="lede">
+          threeplay is a small 3D game engine for the browser. Describe objects with components,
+          let three.js draw them and Rapier simulate them, and ship the whole game from one script
+          tag.
+        </p>
+        <div class="btn-row">
+          <a class="btn btn-primary" href={url("getting-started/")}>Get started</a>
+          <a class="btn btn-yellow" href={url("examples/")}>Examples</a>
+          <a class="btn" href={url("playground/")}>Playground</a>
+          <a class="btn" href={REPO_URL}>
+            <svg viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M12 .5a11.5 11.5 0 0 0-3.64 22.4c.58.1.79-.25.79-.55v-2c-3.2.7-3.87-1.37-3.87-1.37-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.18 1.76 1.18 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.24-1.28-5.24-5.69 0-1.26.45-2.28 1.18-3.09-.12-.29-.51-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11 11 0 0 1 5.76 0c2.2-1.49 3.17-1.18 3.17-1.18.62 1.59.23 2.76.11 3.05.74.81 1.18 1.83 1.18 3.09 0 4.42-2.7 5.4-5.27 5.68.41.36.78 1.06.78 2.14v3.17c0 .31.21.66.8.55A11.5 11.5 0 0 0 12 .5Z"
+              ></path>
+            </svg>
+            GitHub
+          </a>
+        </div>
+      </div>
+      <div>
+        <PlayFrame
+          example={hero.name}
+          title={hero.title}
+          thumb={hero.thumb}
+          label={`${hero.name}/main.js is running here`}
+          eager
+        />
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-dark" id="few-lines">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>A whole game in a few lines</h2>
+        <p class="lede">
+          A floor, a physics character, a follow camera and input. There is no build step and no
+          setup: this runs exactly as written, on the right.
+        </p>
+      </div>
+      <div class="split">
+        <CodeBlock code={snippet} title="game.js" />
+        <PlayFrame
+          code={snippet}
+          title="the snippet"
+          thumb={snippetThumb}
+          label="game.js, running"
+          tone="dark"
+        />
+      </div>
+      <p class="btn-row" style="margin-top: 2rem">
+        <a class="btn btn-yellow btn-sm" href={url("playground/")}>Edit it in the playground</a>
+      </p>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Everything a small 3D game needs</h2>
+        <p class="lede">
+          One friendly layer over three.js and Rapier. It covers the common cases, and the full
+          power of both stays one property away.
+        </p>
+      </div>
+      <div class="tiles">
+        {
+          features.map((f) => (
+            <article class="tile">
+              <h3>{f.title}</h3>
+              <p>{f.text}</p>
+              <code>{f.code}</code>
+            </article>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="section section-line" id="compare" style="background: var(--white)">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>How it compares</h2>
+        <p class="lede">
+          threeplay is not trying to replace the big engines. It is the shortest path from an idea
+          to a playable 3D game in a web page.
+        </p>
+      </div>
+      <div class="table-scroll" tabindex="0" role="region" aria-label="Comparison table">
+        <table class="compare">
+          <thead>
+            <tr>
+              <th scope="col"><span class="sr-only">Feature</span></th>
+              {columns.map((c, i) => <th scope="col" class:list={{ us: i === 0 }}>{c}</th>)}
+            </tr>
+          </thead>
+          <tbody>
+            {
+              compare.map((r) => (
+                <tr>
+                  <th scope="row">{r.row}</th>
+                  {r.cells.map((c, i) => (
+                    <td class:list={{ us: i === 0 }}>
+                      <span class={`verdict ${c.verdict}`}>{c.label}</span>
+                      {c.note && <span>{c.note}</span>}
+                    </td>
+                  ))}
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </div>
+      <p class="fine-print">
+        Honest summary: pick threeplay for jams, prototypes, teaching and small games where you
+        want to write game logic, not engine plumbing. Pick Babylon.js or plain three.js when you
+        need a visual editor, a huge ecosystem or total control, and react-three-fiber when your
+        app is already React. Sizes and ratings are approximate and reflect the state of each
+        project at the time of writing.
+      </p>
+    </div>
+  </section>
+
+  <section class="section section-line" id="examples">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Play the examples</h2>
+        <p class="lede">
+          Seven small games, each one in a single file. Play them in the page, read the source and
+          open any of them in the playground.
+        </p>
+      </div>
+      <div class="strip">
+        {examples.map((e) => <ExampleCard example={e} />)}
+      </div>
+      <p class="strip-foot">
+        <a class="btn btn-primary" href={url("examples/")}>See all examples</a>
+      </p>
+    </div>
+  </section>
+</Site>

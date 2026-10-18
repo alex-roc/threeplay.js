@@ -1,0 +1,28 @@
+---
+import ExampleCard from "../../components/ExampleCard.astro";
+import { examples } from "../../data/examples";
+import Site from "../../layouts/Site.astro";
+---
+
+<Site
+  title="Examples"
+  description="Seven small 3D games built with threeplay. Play them in the page, read the source and open them in the playground."
+  active="examples"
+>
+  <header class="page-head">
+    <div class="wrap">
+      <h1>Examples</h1>
+      <p class="lede">
+        Every game is a single <code class="inline-code">main.js</code>. Play it here, read how it
+        works, then change it in the playground.
+      </p>
+    </div>
+  </header>
+  <section class="section">
+    <div class="wrap">
+      <div class="cards">
+        {examples.map((e) => <ExampleCard example={e} />)}
+      </div>
+    </div>
+  </section>
+</Site>

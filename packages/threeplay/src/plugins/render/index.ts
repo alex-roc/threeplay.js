@@ -6,7 +6,7 @@ import { createNoneBackend } from "./backends/none";
 import { barColor, computeLayout, type Layout, layoutChanged } from "./layout";
 import { createDefaultLights } from "./lighting";
 import { createLightComps } from "./lights";
-import { showLoadingBar } from "./loading";
+import { showError, showLoadingBar } from "./loading";
 import { projectToScreen, screenToRay } from "./project";
 import { createStage } from "./stage";
 import type { BackendOpts, FogOpts, RenderAPI, RendererBackend, RendererKind } from "./types";
@@ -155,6 +155,7 @@ export const renderPlugin = definePlugin<RenderAPI>({
       const stopLoading = showLoadingBar(stage.overlay, () => k.loadProgress());
       k.hooks.on("loaded", stopLoading);
       k.onQuit(stopLoading);
+      k.hooks.on("error", (err) => showError(stage.overlay, err));
     }
 
     k.onQuit(() => {

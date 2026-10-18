@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" stroke="#14213d" stroke-width="3" stroke-linejoin="round">
+  <title>threeplay</title>
+  <path d="M32 4 58 19 32 34 6 19Z" fill="#ffbe0b"/>
+  <path d="M6 19 32 34V60L6 45Z" fill="#fb8500"/>
+  <path d="M32 34 58 19V45L32 60Z" fill="#219ebc"/>
+  <path d="M38.5 35.5v15.5L52.8 35Z" fill="#fff" stroke-width="2"/>
+</svg>

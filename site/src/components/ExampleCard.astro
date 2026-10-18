@@ -1,0 +1,26 @@
+---
+import { Image } from "astro:assets";
+import type { Example } from "../data/examples";
+import { url } from "../lib/url";
+
+interface Props {
+  example: Example;
+}
+const { example } = Astro.props;
+---
+
+<a class="card" href={url(`examples/${example.name}/`)}>
+  <Image
+    src={example.thumb}
+    alt={`Screenshot of the ${example.title} example`}
+    widths={[320, 480, 640]}
+    sizes="(min-width: 40rem) 18rem, 80vw"
+    loading="lazy"
+    decoding="async"
+  />
+  <span class="card-body">
+    <span class="genre">{example.genre}</span>
+    <h3>{example.title}</h3>
+    <p>{example.description}</p>
+  </span>
+</a>

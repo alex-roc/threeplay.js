@@ -12,3 +12,5 @@ site/src/content/docs/api/
 CLAUDE.md
 AGENTS.md
 .claude/
+site/public/play/
+site/dist/

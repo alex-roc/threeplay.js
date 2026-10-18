@@ -1,0 +1,81 @@
+---
+import CodeBlock from "../../components/CodeBlock.astro";
+import PlayFrame from "../../components/PlayFrame.astro";
+import { exampleSource, examples, repoFile } from "../../data/examples";
+import Site from "../../layouts/Site.astro";
+import { url } from "../../lib/url";
+
+export function getStaticPaths() {
+  return examples.map((example, i) => ({
+    params: { name: example.name },
+    props: { example, prev: examples[i - 1], next: examples[i + 1] },
+  }));
+}
+
+const { example, prev, next } = Astro.props;
+const source = exampleSource(example.name);
+---
+
+<Site title={example.title} description={example.description} active="examples">
+  <header class="page-head">
+    <div class="wrap">
+      <p class="crumb"><a href={url("examples/")}>Examples</a> / {example.name}</p>
+      <h1>{example.title}</h1>
+      <p class="lede">{example.about}</p>
+    </div>
+  </header>
+  <section class="section">
+    <div class="wrap">
+      <div class="example-layout">
+        <PlayFrame
+          example={example.name}
+          title={example.title}
+          thumb={example.thumb}
+          label={`${example.name}/main.js`}
+        />
+        <aside class="facts">
+          <div>
+            <h3>Controls</h3>
+            <ul>{example.controls.map((c) => <li>{c}</li>)}</ul>
+          </div>
+          <div>
+            <h3>What it shows</h3>
+            <ul class="chips">{example.features.map((f) => <li>{f}</li>)}</ul>
+          </div>
+          <div class="btn-row">
+            <a class="btn btn-primary btn-sm" href={url(`playground/?example=${example.name}`)}>
+              Open in playground
+            </a>
+            <a class="btn btn-sm" href={repoFile(`examples/${example.name}/main.js`)}>
+              View on GitHub
+            </a>
+          </div>
+        </aside>
+      </div>
+
+      <div class="source-head">
+        <h2>Source</h2>
+      </div>
+      <CodeBlock code={source} title={`examples/${example.name}/main.js`} />
+
+      <nav class="pager" aria-label="Other examples">
+        {
+          prev ? (
+            <a class="btn btn-sm" href={url(`examples/${prev.name}/`)}>
+              &larr; {prev.title}
+            </a>
+          ) : (
+            <span />
+          )
+        }
+        {
+          next && (
+            <a class="btn btn-sm" href={url(`examples/${next.name}/`)}>
+              {next.title} &rarr;
+            </a>
+          )
+        }
+      </nav>
+    </div>
+  </section>
+</Site>

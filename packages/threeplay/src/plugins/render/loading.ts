@@ -28,3 +28,20 @@ export function showLoadingBar(overlay: HTMLElement, progress: () => number): ()
     track.remove();
   };
 }
+
+/**
+ * Shows an uncaught error over the game (the core stops the loop on errors
+ * instead of freezing silently). Escaped as text, never as HTML.
+ */
+export function showError(overlay: HTMLElement, err: unknown) {
+  const box = document.createElement("div");
+  box.style.cssText =
+    "position:absolute;inset:0;padding:24px;box-sizing:border-box;background:rgba(20,20,40,.88);color:#fff;font:14px/1.4 ui-monospace,monospace;white-space:pre-wrap;overflow:auto;pointer-events:auto";
+  const title = document.createElement("div");
+  title.style.cssText = "font-weight:bold;font-size:18px;margin-bottom:12px;color:#ff8fa3";
+  title.textContent = "Error — the game stopped";
+  const body = document.createElement("div");
+  body.textContent = err instanceof Error ? `${err.message}\n\n${err.stack ?? ""}` : String(err);
+  box.append(title, body);
+  overlay.appendChild(box);
+}

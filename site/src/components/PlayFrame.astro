@@ -1,0 +1,82 @@
+---
+// Click-to-play facade: shows the thumbnail and only loads the game (Rapier alone is
+// ~1.7 MB gzip) when the visitor asks for it.
+import { Image } from "astro:assets";
+import type { ImageMetadata } from "astro";
+import { url } from "../lib/url";
+
+interface Props {
+  title: string;
+  thumb: ImageMetadata;
+  /** Example name: plays `play/<example>/index.html`. */
+  example?: string;
+  /** Alternatively, source code to run in a srcdoc iframe with the engine. */
+  code?: string;
+  /** Shown in the window title bar. */
+  label?: string;
+  tone?: "light" | "dark";
+  eager?: boolean;
+}
+
+const { title, thumb, example, code, label = title, tone = "light", eager = false } = Astro.props;
+const src = example ? url(`play/${example}/index.html`) : undefined;
+---
+
+<div class:list={["window", { "on-dark": tone === "dark" }]}>
+  <div class="window-bar">
+    <i></i><i></i><i></i>
+    <span>{label}</span>
+    <button class="fs-btn spacer" type="button" data-fullscreen hidden>Fullscreen</button>
+  </div>
+  <div
+    class="play"
+    data-play
+    data-src={src}
+    data-code={code}
+    data-vendor={url("vendor/threeplay/threeplay.mjs")}
+    data-title={title}
+  >
+    <Image
+      src={thumb}
+      alt=""
+      widths={[480, 800, 960]}
+      sizes="(min-width: 64rem) 50vw, 100vw"
+      loading={eager ? "eager" : "lazy"}
+      decoding="async"
+    />
+    <button class="play-btn" type="button" aria-label={`Play ${title}`}>
+      <span class="play-disc">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 2.5v19L21 12z"></path></svg>
+      </span>
+      <small>Click to play (loads about 1.7 MB)</small>
+    </button>
+  </div>
+</div>
+
+<script>
+  import { buildSrcdoc } from "../lib/runner";
+
+  function start(play: HTMLElement) {
+    if (play.classList.contains("is-live")) return;
+    const frame = document.createElement("iframe");
+    frame.title = play.dataset.title ?? "threeplay game";
+    frame.allow = "autoplay; gamepad; fullscreen; clipboard-write";
+    if (play.dataset.src) frame.src = play.dataset.src;
+    else {
+      const vendor = new URL(play.dataset.vendor ?? "", location.href).href;
+      frame.srcdoc = buildSrcdoc(play.dataset.code ?? "", vendor, { bridge: false });
+    }
+    frame.addEventListener("load", () => frame.contentWindow?.focus());
+    play.append(frame);
+    play.classList.add("is-live");
+    const fs = play.closest(".window")?.querySelector<HTMLElement>("[data-fullscreen]");
+    if (fs) {
+      fs.hidden = false;
+      fs.onclick = () => frame.requestFullscreen?.();
+    }
+  }
+
+  for (const play of document.querySelectorAll<HTMLElement>("[data-play]")) {
+    play.querySelector(".play-btn")?.addEventListener("click", () => start(play));
+  }
+</script>

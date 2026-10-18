@@ -43,7 +43,8 @@ export const transformPlugin = definePlugin<TransformAPI>({
       last.copy(rot);
     }
 
-    k.hooks.on("afterUpdate", () => {
+    // lateUpdate: after character controllers (physics afterUpdate) moved.
+    k.hooks.on("lateUpdate", () => {
       for (const obj of following) {
         const f = obj.follow as FollowComp["follow"];
         if (!f.target?.exists()) continue;
@@ -64,7 +65,8 @@ export const transformPlugin = definePlugin<TransformAPI>({
           return self(this).object3d.position;
         },
         set pos(v: Vector3) {
-          self(this).object3d.position.copy(v);
+          const p = self(this).object3d.position;
+          p.set(v.x, v.y, v.z);
         },
         move(mx: number | Vec3Like, my?: number, mz?: number) {
           const obj = self(this);
@@ -175,11 +177,12 @@ export const transformPlugin = definePlugin<TransformAPI>({
       const initial = x === undefined ? new Vector3(1, 1, 1) : toVec3(x, y, z, true);
       return {
         id: "scale",
-        get scale() {
+        get scale(): Vector3 {
           return self(this).object3d.scale;
         },
-        set scale(v: Vector3) {
-          self(this).object3d.scale.copy(v);
+        set scale(v: Vector3 | number) {
+          // obj.scale = 2 is uniform, like scale(2).
+          self(this).object3d.scale.copy(toVec3(v, undefined, undefined, true));
         },
         scaleTo(sx: number, sy?: number, sz?: number) {
           self(this).object3d.scale.copy(toVec3(sx, sy, sz, true));

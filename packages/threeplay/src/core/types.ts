@@ -109,7 +109,7 @@ export interface GameObjRaw {
   hidden: boolean;
 
   /** Adds a child object. */
-  add<T extends CompList>(comps?: T): GameObj<MergeComps<T[number]>>;
+  add<T extends CompList>(comps?: readonly [...T]): GameObj<MergeComps<T[number]>>;
   /** Removes (destroys) a child. */
   remove(child: GameObj): void;
   /** Destroys this object and its subtree. */
@@ -198,8 +198,10 @@ export interface EngineHooks {
   afterFixedUpdate: [fixedDt: number];
   /** Before objects' `update`. */
   beforeUpdate: [dt: number];
-  /** After objects' `update` (e.g. move the camera). */
+  /** After objects' `update` (e.g. character controllers, then the camera). */
   afterUpdate: [dt: number];
+  /** After every `afterUpdate`: positions are final (e.g. `follow()`, rotation sync). */
+  lateUpdate: [dt: number];
   /** Time to draw. `alpha` is the fraction of a fixed step left over. */
   render: [alpha: number];
   /** End of a frame (e.g. clear "pressed this frame" input). */
@@ -212,6 +214,8 @@ export interface EngineHooks {
   objectAdd: [obj: GameObj];
   /** An object is being destroyed (before its node is detached). */
   objectDestroy: [obj: GameObj];
+  /** An uncaught error stopped the loop (the render plugin shows it on screen). */
+  error: [err: unknown];
 }
 
 /** Typed emitter for {@link EngineHooks}. */
@@ -242,7 +246,7 @@ export interface EngineCore {
 
   // objects
   /** Adds an object to the scene. */
-  add<T extends CompList>(comps?: T): GameObj<MergeComps<T[number]>>;
+  add<T extends CompList>(comps?: readonly [...T]): GameObj<MergeComps<T[number]>>;
   /** Destroys an object. */
   destroy(obj: GameObj): void;
   /** Destroys every object with a tag. */

@@ -76,16 +76,27 @@ export class EventEmitter {
  * one scope for "global" listeners and one per running scene.
  */
 export class Scope {
-  private ctrls: EventController[] = [];
+  private ctrls = new Set<EventController>();
 
+  /** Tracks a controller; cancelling it (by hand or on dispose) also forgets it. */
   track<C extends EventController>(ctrl: C): C {
-    this.ctrls.push(ctrl);
+    this.ctrls.add(ctrl);
+    const cancel = ctrl.cancel;
+    ctrl.cancel = () => {
+      cancel.call(ctrl);
+      this.ctrls.delete(ctrl);
+    };
     return ctrl;
   }
 
   dispose() {
-    for (const c of this.ctrls) c.cancel();
-    this.ctrls.length = 0;
+    for (const c of [...this.ctrls]) c.cancel();
+    this.ctrls.clear();
+  }
+
+  /** Number of live controllers (for tests and leak checks). */
+  get size() {
+    return this.ctrls.size;
   }
 }
 

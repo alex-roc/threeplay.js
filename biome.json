@@ -2,7 +2,15 @@
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
   "vcs": { "enabled": true, "clientKind": "git", "useIgnoreFile": true },
   "files": {
-    "includes": ["**", "!**/dist", "!**/.astro", "!site/public/vendor", "!site/public/examples"]
+    "includes": [
+      "**",
+      "!**/dist",
+      "!**/.astro",
+      "!site/public/vendor",
+      "!site/public/play",
+      "!site/src/content/docs/api",
+      "!site/dist"
+    ]
   },
   "formatter": { "indentStyle": "space", "indentWidth": 2, "lineWidth": 100 },
   "javascript": { "formatter": { "quoteStyle": "double" } },
@@ -10,7 +18,19 @@
     "rules": {
       "preset": "recommended",
       "suspicious": { "noExplicitAny": "off" },
-      "style": { "noNonNullAssertion": "off" }
+      "style": { "noNonNullAssertion": "off", "noDescendingSpecificity": "off" }
     }
-  }
+  },
+  "overrides": [
+    {
+      "includes": ["**/*.astro"],
+      "linter": {
+        "rules": { "correctness": { "noUnusedImports": "off", "noUnusedVariables": "off" } }
+      }
+    },
+    {
+      "includes": ["site/**/*.css"],
+      "linter": { "rules": { "complexity": { "noImportantStyles": "off" } } }
+    }
+  ]
 }

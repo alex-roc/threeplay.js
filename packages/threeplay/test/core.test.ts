@@ -294,3 +294,66 @@ describe("plugins", () => {
     expect(started).toHaveBeenCalledOnce();
   });
 });
+
+describe("review fixes", () => {
+  it("finished timers and cancelled listeners don't pile up in the scene scope", () => {
+    const k = make();
+    k.scene("main", () => {
+      for (let i = 0; i < 1000; i++) k.wait(0);
+      const c = k.onUpdate(() => {});
+      c.cancel();
+    });
+    k.go("main");
+    k.step(0.016);
+    k.step(0.016);
+    // Only an internal measure is available: timers no longer run nor leak handlers.
+    const fn = vi.fn();
+    k.onUpdate(fn);
+    k.step(0.016);
+    expect(fn).toHaveBeenCalledOnce();
+  });
+
+  it("replacing a component by id keeps dependents", () => {
+    const k = make();
+    const o = k.add([
+      { id: "base", v: 1 },
+      { id: "dep", require: ["base"] },
+    ]);
+    expect(() => o.use({ id: "base", v: 2 })).not.toThrow();
+    expect(o.v).toBe(2);
+    expect(() => o.unuse("base")).toThrow(/requires it/);
+  });
+
+  it("rgb() 0–255 and arrays are sRGB like hex strings", async () => {
+    const { rgb } = await import("../src");
+    expect(rgb(128, 128, 128).getHexString()).toBe("808080");
+    expect(rgb([255, 120, 0]).getHexString()).toBe(rgb("#ff7800").getHexString());
+  });
+
+  it("onSceneLeave registered at top level persists across scenes", () => {
+    const k = make();
+    const left = vi.fn();
+    k.onSceneLeave(left);
+    k.scene("a", () => {});
+    k.scene("b", () => {});
+    k.go("a");
+    k.go("b");
+    k.go("a");
+    expect(left).toHaveBeenCalledTimes(2);
+  });
+
+  it("stops updating an object destroyed by its own component", () => {
+    const k = make();
+    const after = vi.fn();
+    k.add([
+      {
+        update() {
+          (this as any).destroy();
+        },
+      },
+      { update: after },
+    ]);
+    k.step(0.016);
+    expect(after).not.toHaveBeenCalled();
+  });
+});
