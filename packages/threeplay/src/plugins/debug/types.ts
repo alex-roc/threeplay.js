@@ -1,3 +1,5 @@
+import type { GameObj } from "../../core/types";
+
 /** Options added to `threeplay()` by the debug plugin. */
 export interface DebugOpts {
   /** Key that toggles the inspector (default `"f1"`; `false` disables it). */
@@ -6,9 +8,13 @@ export interface DebugOpts {
   debug?: boolean;
 }
 
-/** The `debug` object. */
+/** The `debug` object (`k.debug`). Without a render overlay (headless) only the data API works. */
 export interface Debug {
-  /** Shows colliders, FPS, object count and the inspected object's components. */
+  /**
+   * Shows the inspector: FPS, object count, renderer info and the components
+   * of the object under the mouse, plus colliders (physics) or bounding boxes.
+   * Setting it emits the `debugInspect` hook. The `debugKey` toggles it.
+   */
   inspect: boolean;
   /** Pauses the game (rendering continues). */
   paused: boolean;
@@ -18,15 +24,19 @@ export interface Debug {
   fps(): number;
   /** Number of live objects. */
   objectCount(): number;
-  /** Prints a message on screen (and in the console). */
+  /** Prints a message on screen (it fades after ~4 s) and in the console. */
   log(...msg: unknown[]): void;
+  /** Like `log`, in red, and through `console.error`. */
   error(...msg: unknown[]): void;
   /** Clears on-screen messages. */
   clearLog(): void;
+  /** The object under the mouse (nearest visible hit), or `null` (also when there is no input or render). */
+  hovered(): GameObj | null;
 }
 
 /** API of the debug plugin. */
 export interface DebugAPI {
+  /** Debug tools. */
   debug: Debug;
 }
 
