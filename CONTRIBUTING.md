@@ -17,7 +17,7 @@ pnpm site:dev     # the website and docs
 
 Read [`dev-docs/architecture.md`](dev-docs/architecture.md) first: it explains
 the core, the plugin contract and the shared interfaces. The website is described in
-[`dev-docs/site.md`](dev-docs/site.md).
+[`dev-docs/site.md`](dev-docs/site.md), and releasing in [`dev-docs/releasing.md`](dev-docs/releasing.md).
 
 ## Writing a component
 
