@@ -1,6 +1,6 @@
 import type * as THREE from "three";
 import type { Comp, EventController, GameObj, Tag } from "../../core/types";
-import type { Vec3Like } from "../transform/types";
+import type { MoveHandler, Vec3Like } from "../transform/types";
 
 /** A contact between two objects, as seen from one of them. */
 export interface Collision {
@@ -29,9 +29,9 @@ export interface AreaOpts {
    * `"mesh"` builds a trimesh (static objects only), `"hull"` a convex hull.
    */
   shape?: "auto" | "box" | "sphere" | "capsule" | "mesh" | "hull";
-  /** Explicit box size, overriding the derived one. */
+  /** Explicit size (local units, scaled with the object), overriding the derived one. */
   size?: Vec3Like;
-  /** Offset of the collider from the object origin. */
+  /** Offset of the collider from the object origin, in local units (scaled with the object). */
   offset?: Vec3Like;
   /** A sensor detects overlaps but nothing bounces off it. Default: `true` without `body()`. */
   sensor?: boolean;
@@ -78,8 +78,12 @@ export interface BodyOpts {
   ccd?: boolean;
 }
 
-/** Fields added by `body()`. Requires `area()`. */
-export interface BodyComp extends Comp {
+/**
+ * Fields added by `body()`. Requires `area()`. It is a {@link MoveHandler}:
+ * `move()` sets the horizontal velocity of dynamic bodies and translates
+ * kinematic/static ones.
+ */
+export interface BodyComp extends Comp, MoveHandler {
   id: "body";
   /** Linear velocity in units/s (read or assign). */
   vel: THREE.Vector3;
@@ -118,7 +122,7 @@ export interface CharacterOpts {
  * `move()` (from `pos`) slides along walls instead of passing through.
  * Requires `area()`; do not combine with `body()`.
  */
-export interface CharacterComp extends Comp {
+export interface CharacterComp extends Comp, MoveHandler {
   id: "character";
   /** Current velocity (vertical part includes gravity). */
   vel: THREE.Vector3;
@@ -146,12 +150,17 @@ export interface RaycastOpts {
  */
 export interface PhysicsBackend {
   readonly name: string;
+  /** `true` once the engine finished loading and bodies can be created. */
+  readonly ready: boolean;
   /** The native world (escape hatch, e.g. a `RAPIER.World`). */
   readonly world: unknown;
   /** The native module (e.g. `RAPIER`). */
   readonly native: unknown;
   init(): Promise<void>;
   setGravity(g: THREE.Vector3): void;
+  /** Current gravity vector (a copy). */
+  getGravity(): THREE.Vector3;
+  /** Advances the simulation by `dt` seconds. */
   step(dt: number): void;
   dispose(): void;
 }
