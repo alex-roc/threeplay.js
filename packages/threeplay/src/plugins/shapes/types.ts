@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { ColorLike } from "../../core/types";
+import type { ColorLike, Comp } from "../../core/types";
 
 /**
  * Describes the geometry of an object so other plugins (physics colliders,
@@ -23,7 +23,7 @@ export type ShapeDesc =
  * `shape` (its description) and `mesh` (the three.js object that holds the
  * geometry, a child of `object3d`).
  */
-export interface ShapeComp {
+export interface ShapeComp extends Comp {
   shape: ShapeDesc;
   mesh: THREE.Object3D;
 }
@@ -45,13 +45,13 @@ export interface PrimitiveComp extends ShapeComp {
 }
 
 /** Fields added by `color()`. Applies to the mesh material, and to HUD elements. */
-export interface ColorComp {
+export interface ColorComp extends Comp {
   id: "color";
   color: THREE.Color;
 }
 
 /** Fields added by `opacity()`. */
-export interface OpacityComp {
+export interface OpacityComp extends Comp {
   id: "opacity";
   opacity: number;
   /** Fades to 0 in `seconds`, then destroys the object if `destroy` is set. */
@@ -91,7 +91,9 @@ export interface ShapesAPI {
   /** Component: opacity 0–1. */
   opacity(value?: number): OpacityComp;
   /** Component: replaces the material of the shape. */
-  material(opts: MaterialOpts | THREE.Material): { id: "material"; material: THREE.Material };
+  material(
+    opts: MaterialOpts | THREE.Material,
+  ): Comp & { id: "material"; material: THREE.Material };
 }
 
 declare module "../../core/types" {

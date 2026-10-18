@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { CompList, GameObj } from "../../core/types";
+import type { Comp, CompList, GameObj } from "../../core/types";
 
 export interface LevelOpts {
   /** Size of a tile on X and Z (default 1). */
@@ -19,7 +19,7 @@ export interface LevelOpts {
  * Fields of the level object returned by `addLevel()`. Tiles are its
  * children, laid on the XZ plane: column → +X, row → +Z.
  */
-export interface LevelComp {
+export interface LevelComp extends Comp {
   id: "level";
   readonly numCols: number;
   readonly numRows: number;

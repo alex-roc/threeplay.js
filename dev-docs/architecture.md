@@ -14,6 +14,7 @@ packages/threeplay/src/
     gameobj.ts        GameObjImpl: components, tags, tree, events
     events.ts         HandlerList / EventEmitter / Scope
     math.ts           vec3, rgb, rand, lerp, easings…
+    util.ts           helpers for plugins: self(this), toVec3, targetPos, gameObjOf
   plugins/<name>/
     types.ts          the plugin's public contract (API + options + hooks), merged into
                       the core types through declaration merging
@@ -79,8 +80,9 @@ export const myPlugin = definePlugin<MyAPI>({
 
 ## Built-in plugins and install order
 
-`render → transform → shapes → input → camera → physics → hud → assets → audio
-→ level → gameplay → debug`. `threeplay({ core: [...] })` replaces the list
+`render → transform → shapes → physics → input → camera → hud → assets → audio
+→ level → gameplay → debug`. Hooks run in install order, so physics' `afterUpdate`
+(character controllers) runs before the camera's. `threeplay({ core: [...] })` replaces the list
 (e.g. a headless server without render/input/audio).
 
 ## Builds

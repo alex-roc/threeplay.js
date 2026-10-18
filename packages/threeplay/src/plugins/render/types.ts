@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { ColorLike, EventController } from "../../core/types";
+import type { ColorLike, Comp, EventController } from "../../core/types";
 
 /** Which three.js renderer draws the game. */
 export type RendererKind = "webgpu" | "webgl" | "none";
@@ -102,17 +102,17 @@ export interface RenderAPI {
   onResize(fn: () => void): EventController;
 
   /** Component: a point light attached to the object. */
-  pointLight(opts?: LightOpts & { distance?: number; decay?: number }): {
+  pointLight(opts?: LightOpts & { distance?: number; decay?: number }): Comp & {
     id: "pointLight";
     light: THREE.PointLight;
   };
   /** Component: a spot light attached to the object, pointing at `target`. */
-  spotLight(opts?: LightOpts & { angle?: number; distance?: number; penumbra?: number }): {
+  spotLight(opts?: LightOpts & { angle?: number; distance?: number; penumbra?: number }): Comp & {
     id: "spotLight";
     light: THREE.SpotLight;
   };
   /** Component: a directional light placed at the object. */
-  dirLight(opts?: LightOpts): { id: "dirLight"; light: THREE.DirectionalLight };
+  dirLight(opts?: LightOpts): Comp & { id: "dirLight"; light: THREE.DirectionalLight };
 }
 
 declare module "../../core/types" {

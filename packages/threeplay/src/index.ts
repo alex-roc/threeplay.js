@@ -36,6 +36,7 @@ export { EventEmitter, HandlerList, Scope } from "./core/events";
 export { GameObjImpl } from "./core/gameobj";
 export * from "./core/math";
 export type * from "./core/types";
+export * from "./core/util";
 export * from "./plugins";
 export type * from "./plugins/assets/types";
 export type * from "./plugins/audio/types";

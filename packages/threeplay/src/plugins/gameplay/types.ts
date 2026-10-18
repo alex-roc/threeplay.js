@@ -1,8 +1,8 @@
 import type { Easing } from "../../core/math";
-import type { EventController, TimerController, Tweenable } from "../../core/types";
+import type { Comp, EventController, TimerController, Tweenable } from "../../core/types";
 
 /** Fields added by `health()`. */
-export interface HealthComp {
+export interface HealthComp extends Comp {
   id: "health";
   hp: number;
   maxHp: number;
@@ -16,7 +16,7 @@ export interface HealthComp {
 }
 
 /** Fields added by `state()`: a small finite state machine. */
-export interface StateComp {
+export interface StateComp extends Comp {
   id: "state";
   state: string;
   enterState(name: string, ...args: unknown[]): void;
@@ -26,12 +26,12 @@ export interface StateComp {
 }
 
 /** Fields added by `lifespan()`. */
-export interface LifespanComp {
+export interface LifespanComp extends Comp {
   id: "lifespan";
 }
 
 /** Fields added by `timer()`: timers that die with the object. */
-export interface TimerComp {
+export interface TimerComp extends Comp {
   id: "timer";
   wait(seconds: number, fn?: () => void): TimerController;
   loop(seconds: number, fn: () => void, count?: number): TimerController;
@@ -55,7 +55,7 @@ export interface OffscreenOpts {
 }
 
 /** Fields added by `offscreen()`. */
-export interface OffscreenComp {
+export interface OffscreenComp extends Comp {
   id: "offscreen";
   isOffScreen(): boolean;
   onExitScreen(fn: () => void): EventController;

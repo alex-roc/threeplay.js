@@ -1,5 +1,5 @@
 import type * as THREE from "three";
-import type { EventController, GameObj, Tag } from "../../core/types";
+import type { Comp, EventController, GameObj, Tag } from "../../core/types";
 import type { Vec3Like } from "../transform/types";
 
 /** A contact between two objects, as seen from one of them. */
@@ -40,7 +40,7 @@ export interface AreaOpts {
 }
 
 /** Fields added by `area()`. */
-export interface AreaComp {
+export interface AreaComp extends Comp {
   id: "area";
   area: { shape: string; sensor: boolean };
   /** When this object starts touching another (optionally with `tag`). */
@@ -79,7 +79,7 @@ export interface BodyOpts {
 }
 
 /** Fields added by `body()`. Requires `area()`. */
-export interface BodyComp {
+export interface BodyComp extends Comp {
   id: "body";
   /** Linear velocity in units/s (read or assign). */
   vel: THREE.Vector3;
@@ -118,7 +118,7 @@ export interface CharacterOpts {
  * `move()` (from `pos`) slides along walls instead of passing through.
  * Requires `area()`; do not combine with `body()`.
  */
-export interface CharacterComp {
+export interface CharacterComp extends Comp {
   id: "character";
   /** Current velocity (vertical part includes gravity). */
   vel: THREE.Vector3;

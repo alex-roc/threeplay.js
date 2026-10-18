@@ -1,12 +1,12 @@
 import type * as THREE from "three";
-import type { GameObj } from "../../core/types";
+import type { Comp, GameObj } from "../../core/types";
 
 /** Something that has a position: a vector or a game object with `pos`. */
 export type Vec3Like = THREE.Vector3 | { x: number; y: number; z: number };
 export type PosTarget = Vec3Like | GameObj;
 
 /** Fields added by `pos()`. */
-export interface PosComp {
+export interface PosComp extends Comp {
   id: "pos";
   /** Local position (it *is* `object3d.position`). */
   pos: THREE.Vector3;
@@ -37,7 +37,7 @@ export interface MoveHandler {
 }
 
 /** Fields added by `rotate()`. Angles are in degrees. */
-export interface RotateComp {
+export interface RotateComp extends Comp {
   id: "rotate";
   /** Euler rotation in degrees (X, Y, Z), applied to `object3d` every frame. */
   rot: THREE.Vector3;
@@ -52,7 +52,7 @@ export interface RotateComp {
 }
 
 /** Fields added by `scale()`. */
-export interface ScaleComp {
+export interface ScaleComp extends Comp {
   id: "scale";
   /** Local scale (it *is* `object3d.scale`). */
   scale: THREE.Vector3;
@@ -60,7 +60,7 @@ export interface ScaleComp {
 }
 
 /** Fields added by `follow()`. */
-export interface FollowComp {
+export interface FollowComp extends Comp {
   id: "follow";
   follow: { target: GameObj | null; offset: THREE.Vector3 };
 }
