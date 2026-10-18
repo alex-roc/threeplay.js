@@ -151,6 +151,7 @@ declare global {
   const setFog: Engine["setFog"];
   const setGravity: Engine["setGravity"];
   const setPaused: Engine["setPaused"];
+  const setSunDirection: Engine["setSunDirection"];
   const setTimeScale: Engine["setTimeScale"];
   const sphere: Engine["sphere"];
   const spotLight: Engine["spotLight"];

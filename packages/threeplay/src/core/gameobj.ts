@@ -12,7 +12,16 @@ import type {
   Tag,
 } from "./types";
 
-const LIFECYCLE = new Set(["id", "require", "add", "update", "fixedUpdate", "destroy", "inspect"]);
+const LIFECYCLE = new Set([
+  "id",
+  "require",
+  "conflicts",
+  "add",
+  "update",
+  "fixedUpdate",
+  "destroy",
+  "inspect",
+]);
 
 /** What a game object needs from the engine. */
 export interface GameObjContext {
@@ -250,6 +259,15 @@ export class GameObjImpl implements GameObjRaw {
     const c = comp as Comp;
     const key = c.id ?? `anonymous#${anonId++}`;
     if (c.id && this.has(c.id)) this._remove(c.id); // replacement: dependents keep working
+    for (const e of this._comps) {
+      const other = e.comp.id;
+      if (!other || !c.id) continue;
+      if (c.conflicts?.includes(other) || e.comp.conflicts?.includes(c.id)) {
+        throw new Error(
+          `Components "${other}" and "${c.id}" can't be on the same object: use only one.`,
+        );
+      }
+    }
 
     const props: string[] = [];
     const descs = Object.getOwnPropertyDescriptors(c);

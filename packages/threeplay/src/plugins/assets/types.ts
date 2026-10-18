@@ -27,9 +27,10 @@ export interface ModelOpts {
    */
   faceForward?: boolean;
   /**
-   * Clone the materials for this instance (default `false`: instances share
-   * the template's materials, which is cheaper). Needed to tint or fade one
-   * instance without affecting the others.
+   * Clone the materials for this instance up front (default `false`: instances share
+   * the template's materials, which is cheaper). Not needed to tint or fade one instance:
+   * `color()` and `opacity()` on a model clone its materials automatically. The clones are
+   * disposed when the object is destroyed.
    */
   uniqueMaterials?: boolean;
 }

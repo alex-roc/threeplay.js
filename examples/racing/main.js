@@ -6,7 +6,6 @@ threeplay({
   width: 960,
   height: 540,
   background: "#a3cef1",
-  renderer: new URLSearchParams(location.search).get("renderer") ?? "auto",
 });
 
 // Track: "#" walls, "F" finish line, "C" checkpoint, "S" start.

@@ -26,6 +26,12 @@ export type ShapeDesc =
 export interface ShapeComp extends Comp {
   shape: ShapeDesc;
   mesh: THREE.Object3D;
+  /**
+   * Optional. Makes the shape's materials private to this object (clones them, once),
+   * for shapes whose materials may be shared with other objects, like `model()`.
+   * `color()` and `opacity()` call it before writing to the materials.
+   */
+  isolateMaterials?(): void;
 }
 
 /** Options shared by the primitive shapes. */
@@ -67,6 +73,7 @@ export interface MaterialOpts {
   emissive?: ColorLike;
   emissiveIntensity?: number;
   wireframe?: boolean;
+  /** Faceted look (ignored by `"basic"` and `"toon"`, which don't support it). */
   flatShading?: boolean;
   /** Texture name loaded with `loadTexture()`, or a `THREE.Texture`. */
   map?: string | THREE.Texture;

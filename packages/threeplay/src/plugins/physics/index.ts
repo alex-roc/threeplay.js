@@ -27,6 +27,12 @@ const DEFAULT_GRAVITY = 20;
 /** Default `jump()` speed of bodies. */
 const DEFAULT_JUMP = 8;
 
+/**
+ * Both `body()` and `character()` carry this property. The core refuses two components
+ * that define the same property and names it in the error, so combining them fails with
+ * a readable message (the property names read as the explanation).
+ */
+
 type ObjFn = (other: GameObj, col: Collision) => void;
 
 /** `on(event, [tag,] fn)` for object events whose first argument is the other object. */
@@ -74,9 +80,11 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
       // Rapier is a dynamic import: it lands in its own chunk and loads in parallel.
       k.load(rapier.init());
       const debug = new DebugLines(k, rapier);
+      k.hooks.on("frameStart", (dt) => sys.frameStart(dt));
       k.hooks.on("beforeFixedUpdate", () => sys.beforeFixed());
       k.hooks.on("afterFixedUpdate", (dt) => sys.afterFixed(dt));
-      k.hooks.on("beforeUpdate", () => sys.beforeUpdate());
+      // Dynamic bodies get their interpolated pose here, before `update` and the camera.
+      k.hooks.on("beforeUpdate", () => sys.beforeUpdate(k.fixedDt()));
       // Characters move first, so the camera (installed later) sees final positions.
       k.hooks.on("afterUpdate", (dt) => sys.afterUpdate(dt));
       k.hooks.on("afterUpdate", () => debug.update());
@@ -88,8 +96,12 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
       });
     }
 
-    /** Components shared by `body()` and `character()`. */
-    const stateOf = (o: unknown) => sys.ensure(self(o));
+    /**
+     * The state of an object, without creating it: after `destroy()` it is gone
+     * and calls must neither resurrect it nor leak the object.
+     */
+    const stateOf = (o: unknown) => sys.states.get(self(o));
+    type State = NonNullable<ReturnType<typeof stateOf>>;
 
     function area(opts: AreaOpts = {}): AreaComp {
       let owner: GameObj | null = null;
@@ -98,7 +110,8 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
         area: {
           shape: opts.shape ?? "auto",
           get sensor() {
-            return owner ? isSensorOf(sys.ensure(owner)) : (opts.sensor ?? true);
+            const s = owner ? sys.states.get(owner) : undefined;
+            return s ? isSensorOf(s) : (opts.sensor ?? true);
           },
         },
         onCollide(tagOrFn: Tag | ObjFn, fn?: ObjFn) {
@@ -111,13 +124,15 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
           return listen(self(this), "collideEnd", tagOrFn, fn);
         },
         isColliding(other: GameObj | Tag) {
-          const touching = stateOf(this).touching;
+          const touching = stateOf(this)?.touching;
+          if (!touching) return false;
           if (typeof other !== "string") return touching.has(other);
           for (const o of touching.keys()) if (o.is(other)) return true;
           return false;
         },
         getCollisions() {
-          return [...stateOf(this).touching.keys()];
+          const touching = stateOf(this)?.touching;
+          return touching ? [...touching.keys()] : [];
         },
         add() {
           owner = self(this);
@@ -131,7 +146,7 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
           owner = null;
         },
         inspect() {
-          const s = sys.states.get(self(this));
+          const s = stateOf(this);
           if (!s) return null;
           const kind = s.rb ? s.kind : sys.enabled ? "pending" : "off";
           return `${kind}${isSensorOf(s) ? " (sensor)" : ""}, touching ${s.touching.size}`;
@@ -142,25 +157,19 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
     /** Re-reads the body kind when `body()`/`character()` come or go on a live object. */
     function bodyLifecycle(
       id: "body" | "character",
-      set: (s: ReturnType<typeof stateOf>) => void,
-      clear: (s: ReturnType<typeof stateOf>) => void,
+      set: (s: State) => void,
+      clear: (s: State) => void,
     ) {
       return {
         add(this: GameObj) {
           sys.warnDisabled(id);
-          const other = id === "body" ? "character" : "body";
-          if (this.has(other)) {
-            throw new Error(
-              `${id}() and ${other}() can't be used on the same object: a character is already a kinematic body. Remove one of them.`,
-            );
-          }
           const s = sys.ensure(this);
           set(s);
           sys.markDirty(s);
         },
         destroy(this: GameObj) {
           if (!this.exists()) return; // the whole object is going away: area() cleans up
-          const s = sys.states.get(this);
+          const s = stateOf(this);
           if (!s) return;
           clear(s);
           sys.markDirty(s);
@@ -172,47 +181,58 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
       return {
         id: "body",
         require: ["area"],
+        conflicts: ["character"],
         get vel() {
-          return sys.velocityOf(stateOf(this));
+          const s = stateOf(this);
+          return s ? sys.velocityOf(s) : new Vector3();
         },
         set vel(v: Vector3) {
-          sys.velocityOf(stateOf(this)).copy(v);
+          const s = stateOf(this);
+          if (s) sys.velocityOf(s).copy(v);
         },
         get angularVel() {
-          return sys.angularVelocityOf(stateOf(this));
+          const s = stateOf(this);
+          return s ? sys.angularVelocityOf(s) : new Vector3();
         },
         set angularVel(v: Vector3) {
-          sys.angularVelocityOf(stateOf(this)).copy(v);
+          const s = stateOf(this);
+          if (s) sys.angularVelocityOf(s).copy(v);
         },
         applyImpulse(f: Vec3Like) {
-          stateOf(this).rb?.applyImpulse({ x: f.x, y: f.y, z: f.z }, true);
+          stateOf(this)?.rb?.applyImpulse({ x: f.x, y: f.y, z: f.z }, true);
         },
         applyForce(f: Vec3Like) {
-          sys.applyForce(stateOf(this), f);
+          const s = stateOf(this);
+          if (s) sys.applyForce(s, f);
         },
         applyTorqueImpulse(t: Vec3Like) {
-          stateOf(this).rb?.applyTorqueImpulse({ x: t.x, y: t.y, z: t.z }, true);
+          stateOf(this)?.rb?.applyTorqueImpulse({ x: t.x, y: t.y, z: t.z }, true);
         },
         jump(force = DEFAULT_JUMP) {
-          sys.velocityOf(stateOf(this)).y = force;
+          const s = stateOf(this);
+          if (s) sys.velocityOf(s).y = force;
         },
         isGrounded() {
-          return sys.probeGround(stateOf(this));
+          const s = stateOf(this);
+          return s ? sys.probeGround(s) : false;
         },
         isFalling() {
           const s = stateOf(this);
-          return sys.velocityOf(s).y < 0 && !sys.probeGround(s);
+          return s ? sys.velocityOf(s).y < 0 && !sys.probeGround(s) : false;
         },
         onGround(fn: () => void) {
           const obj = self(this);
-          sys.watchGround(sys.ensure(obj));
+          const s = stateOf(obj);
+          if (s) sys.watchGround(s);
           return obj.on("ground", fn);
         },
         teleport(to: Vec3Like) {
-          sys.teleport(stateOf(this), to);
+          const s = stateOf(this);
+          if (s) sys.teleport(s, to);
         },
         applyMove(delta: Vector3, velocity: Vector3) {
-          sys.moveBody(stateOf(this), delta, velocity);
+          const s = stateOf(this);
+          if (s) sys.moveBody(s, delta, velocity);
         },
         ...bodyLifecycle(
           "body",
@@ -225,6 +245,7 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
         ),
         inspect() {
           const s = stateOf(this);
+          if (!s) return null;
           const v = sys.velocityOf(s);
           return `${s.rb ? s.kind : "pending"}, v=(${v.x.toFixed(1)}, ${v.y.toFixed(1)}, ${v.z.toFixed(1)})`;
         },
@@ -236,30 +257,34 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
       return {
         id: "character",
         require: ["area"],
+        conflicts: ["body"],
         get vel() {
-          return stateOf(this).vel;
+          return stateOf(this)?.vel ?? new Vector3();
         },
         set vel(v: Vector3) {
-          stateOf(this).vel.copy(v);
+          stateOf(this)?.vel.copy(v);
         },
         jump(force = jumpForce) {
-          stateOf(this).vel.y = force;
+          const s = stateOf(this);
+          if (s) s.vel.y = force;
         },
         isGrounded() {
-          return stateOf(this).grounded;
+          return stateOf(this)?.grounded ?? false;
         },
         isFalling() {
           const s = stateOf(this);
-          return !s.grounded && s.vel.y < 0;
+          return s ? !s.grounded && s.vel.y < 0 : false;
         },
         onGround(fn: () => void) {
           return self(this).on("ground", fn);
         },
         teleport(to: Vec3Like) {
-          sys.teleport(stateOf(this), to);
+          const s = stateOf(this);
+          if (s) sys.teleport(s, to);
         },
         applyMove(delta: Vector3) {
-          sys.moveCharacter(stateOf(this), delta);
+          const s = stateOf(this);
+          if (s) sys.moveCharacter(s, delta);
         },
         ...bodyLifecycle(
           "character",
@@ -272,6 +297,7 @@ export const physicsPlugin = definePlugin<PhysicsAPI>({
         ),
         inspect() {
           const s = stateOf(this);
+          if (!s) return null;
           return `${s.grounded ? "grounded" : "airborne"}, vy=${s.vel.y.toFixed(1)}`;
         },
       };

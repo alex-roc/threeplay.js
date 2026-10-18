@@ -54,7 +54,6 @@ threeplay({
   height: 540,
   background: "#22223b",
   plugins: [partyPlugin],
-  renderer: new URLSearchParams(location.search).get("renderer") ?? "auto",
 });
 
 scene("main", () => {

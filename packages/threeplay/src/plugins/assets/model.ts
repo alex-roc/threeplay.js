@@ -46,12 +46,32 @@ export function createModel(
       mesh.castShadow = true;
       mesh.receiveShadow = true;
     }
-    if (opts.uniqueMaterials) {
-      mesh.material = Array.isArray(mesh.material)
-        ? mesh.material.map((m: Material) => m.clone())
-        : mesh.material.clone();
-    }
   });
+
+  // The instance shares the template's materials until something needs to change them.
+  // The clones are this instance's: they are disposed with it (textures stay shared).
+  const cloned = new Set<Material>();
+  let isolated = false;
+  function isolateMaterials() {
+    if (isolated) return;
+    isolated = true;
+    const copies = new Map<Material, Material>(); // meshes sharing a material keep sharing its copy
+    const copy = (m: Material) => {
+      let c = copies.get(m);
+      if (!c) {
+        c = m.clone();
+        copies.set(m, c);
+        cloned.add(c);
+      }
+      return c;
+    };
+    inner.traverse((node) => {
+      const mesh = node as Mesh;
+      if (!mesh.isMesh) return;
+      mesh.material = Array.isArray(mesh.material) ? mesh.material.map(copy) : copy(mesh.material);
+    });
+  }
+  if (opts.uniqueMaterials) isolateMaterials();
 
   if (opts.groundAlign) {
     root.updateMatrixWorld(true);
@@ -68,6 +88,7 @@ export function createModel(
     id: "shape",
     shape: { kind: "model" },
     mesh: root,
+    isolateMaterials,
     anims: clips.map((c) => c.name),
     mixer,
     playAnim(anim: string, play: PlayAnimOpts = {}) {
@@ -124,6 +145,8 @@ export function createModel(
       mixer?.stopAllAction();
       mixer?.uncacheRoot(inner);
       root.removeFromParent();
+      for (const m of cloned) m.dispose();
+      cloned.clear();
     },
     inspect() {
       return cur ? `${name} (${cur.getClip().name})` : name;

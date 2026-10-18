@@ -32,9 +32,10 @@ export const debugPlugin = definePlugin<DebugAPI>({
       return ui;
     };
 
-    // Without a physics plugin to draw colliders, outline the objects' meshes.
+    // Without physics drawing colliders (no plugin, or `physics: false`), outline the objects' meshes.
     const boxes = new BoxHelpers(k.scene3d, () => k.get("*"));
-    const drawsBoxes = () => inspecting && !("physics" in k.plugins);
+    const physicsDraws = () => "physics" in k.plugins && k.physics?.name !== "none";
+    const drawsBoxes = () => inspecting && !physicsDraws();
 
     function hovered() {
       const screen = k.mousePos?.();
@@ -119,6 +120,16 @@ export const debugPlugin = definePlugin<DebugAPI>({
       k.onKeyPress(key, () => {
         debug.inspect = !debug.inspect;
       });
+      // The browser has its own idea of some keys (F1 opens help on Windows, F3 searches...).
+      const canvas = k.canvas;
+      if (canvas) {
+        const wanted = key.toLowerCase();
+        const swallow = (e: KeyboardEvent) => {
+          if (e.key.toLowerCase() === wanted) e.preventDefault();
+        };
+        canvas.addEventListener("keydown", swallow as EventListener);
+        k.onQuit(() => canvas.removeEventListener("keydown", swallow as EventListener));
+      }
     }
     if (k.opts.debug) debug.inspect = true;
 

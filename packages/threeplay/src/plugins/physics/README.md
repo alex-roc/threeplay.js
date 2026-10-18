@@ -10,8 +10,8 @@ before `camera` (characters move in `afterUpdate`, and the camera must see the f
 | Function | What it does |
 | --- | --- |
 | `area(opts?)` | Gives the object a collider. Alone it is a **sensor**: detects overlaps, nothing bounces. Adds `onCollide`, `onCollideUpdate`, `onCollideEnd`, `isColliding`, `getCollisions`. |
-| `body(opts?)` | Rigid body (needs `area()`). `body()` is dynamic, `body({ isStatic })` fixed, `body({ kinematic })` moved by code. Adds `vel`, `angularVel`, `applyImpulse`, `applyForce`, `applyTorqueImpulse`, `jump`, `isGrounded`, `isFalling`, `onGround`, `teleport`. |
-| `character(opts?)` | Kinematic character controller (needs `area()`, not combinable with `body()`): `move()` slides along walls, climbs steps and slopes, falls with gravity. Adds `vel`, `jump`, `isGrounded`, `isFalling`, `onGround`, `teleport`. |
+| `body(opts?)` | Rigid body (needs `area()`). `body()` is dynamic, `body({ isStatic })` fixed, `body({ kinematic })` moved by code. Dynamic bodies are rendered **interpolated** (see below); `body({ interpolate: false })` opts out. Adds `vel`, `angularVel`, `applyImpulse`, `applyForce`, `applyTorqueImpulse`, `jump`, `isGrounded`, `isFalling`, `onGround`, `teleport`. |
+| `character(opts?)` | Kinematic character controller (needs `area()`, not combinable with `body()`): `move()` slides along walls, climbs steps and slopes, falls with gravity (only the x/z part of `move()` is used). Adds `vel`, `jump`, `isGrounded`, `isFalling`, `onGround`, `teleport`. |
 | `setGravity(n \| vec)` / `getGravity()` | A number pulls down (default **20**). |
 | `raycast(origin, dir, maxDist?, { exclude, tag, sensors }?)` | First hit as `{ obj, point, normal, distance }` or `null`. |
 | `onCollide(tagA, tagB, fn)` (+ `Update`, `End`) | Global listeners, scoped to the scene (removed by `go()`). |
@@ -56,6 +56,15 @@ k.onCollide("player", "coin", (_player, coin) => coin.destroy());
 - Fixed step (`beforeFixedUpdate` / `afterFixedUpdate`, 50 Hz): area-only, kinematic and character
   objects push their world transform to the world; dynamic bodies write theirs back to `object3d`
   (in local space, `rot` follows). A dynamic body whose object was moved by code is teleported.
+  Area-only and kinematic objects are pushed to the world only when their world transform changed.
+- **Interpolation.** Rendering usually does not line up with the 50 Hz steps (60/120/144 Hz screens),
+  so dynamic bodies would stutter. Physics keeps the last two simulated poses of every dynamic body
+  and, in `beforeUpdate`, writes the pose interpolated by the fraction of a step still pending to
+  `object3d` (it mirrors the core's accumulator from `frameStart`/`afterFixedUpdate`). So `update`
+  code and the camera (`afterUpdate`) see the visual pose, up to one step (20 ms) behind the
+  simulation. `fixedUpdate` and collision callbacks see the latest simulated pose; `vel`,
+  `isGrounded()`, `raycast` and the debug colliders always use the simulation. Assigning `pos`/`rot`
+  from code is detected (against the last pose physics wrote) and teleports the body.
 - Collisions: `collide` once, `collideUpdate` every fixed step, `collideEnd` on separation or
   destruction (survivors get `collideEnd` when the other object is destroyed).
 - Characters step in `afterUpdate`, once per rendered frame, so a camera following them never jitters.
@@ -64,7 +73,18 @@ k.onCollide("player", "coin", (_player, coin) => coin.destroy());
 
 - **Scale is baked in** when the body is created. Resizing an object later does not resize its collider.
 - **Static bodies do not follow code**: moving a `body({ isStatic })` object by hand has no effect on
-  collisions. Use `body({ kinematic: true })` for moving platforms.
+  collisions, and `move()` on one does nothing (it warns once). Use `body({ kinematic: true })` for
+  moving platforms.
+- **`obj.pos` of a dynamic body is the visual pose** (see Interpolation): up to one fixed step behind
+  the simulation. Use `body({ interpolate: false })` if you need the latest simulated pose in `update`
+  (at the cost of jitter).
+- **Characters only move horizontally through `move()`/`moveTo()`**: the vertical part of the delta is
+  dropped (height comes from gravity and `jump()`), and writing `vel.x`/`vel.z` does nothing; `vel.y`
+  is writable (`vel.y = 5`).
+- **Calls on destroyed objects** (`vel`, `isColliding()`, `getCollisions()`, `isGrounded()`...) return
+  defaults (zero vector, `false`, `[]`) and do not recreate any state.
+- **`body()` and `character()` exclude each other** (`conflicts`); combining them throws
+  `Components "body" and "character" can't be on the same object`.
 - **`move()` on a dynamic body sets its horizontal velocity** (x/z) every call and keeps y. If you stop
   calling it the body keeps sliding until friction stops it; use `damping` or call `move(0)`.
 - **`applyForce()`** acts during the fixed steps of the next frame and is then cleared: call it every

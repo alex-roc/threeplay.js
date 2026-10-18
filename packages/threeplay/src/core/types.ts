@@ -30,6 +30,7 @@ export type Tag = string;
 export type CompLifecycleKey =
   | "id"
   | "require"
+  | "conflicts"
   | "add"
   | "update"
   | "fixedUpdate"
@@ -56,6 +57,8 @@ export interface Comp {
   id?: string;
   /** Ids of components that must be present on the object. */
   require?: string[];
+  /** Ids of components that can't be on the same object (checked both ways). */
+  conflicts?: string[];
   /** Called when the object enters the scene (or when used on a live object). */
   add?(this: GameObj): void;
   /** Called once per frame. */
@@ -161,7 +164,14 @@ export type ColorLike = THREE.ColorRepresentation | readonly [number, number, nu
 
 /**
  * Options of `threeplay()`. Plugins extend this interface with their own
- * options through declaration merging.
+ * options through declaration merging (there is no catch-all index signature,
+ * so a typo like `widht` is a type error):
+ *
+ * ```ts
+ * declare module "threeplay" {
+ *   interface ThreeplayOpts { myPluginSpeed?: number }
+ * }
+ * ```
  */
 export interface ThreeplayOpts {
   /** Put the API on `window` like kaplay does (default `true`). */
@@ -174,8 +184,6 @@ export interface ThreeplayOpts {
   loop?: "auto" | "manual";
   /** Largest frame delta in seconds; longer frames are clamped (default 0.1). */
   maxDt?: number;
-  /** Plugin options (see each plugin). */
-  [option: string]: unknown;
 }
 
 /** A plain set of values to tween. */

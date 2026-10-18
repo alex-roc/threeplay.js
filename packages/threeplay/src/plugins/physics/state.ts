@@ -45,6 +45,13 @@ export interface PhysState {
   /** World transform physics last wrote to (or read from) the object. */
   lastPos: Vector3;
   lastQuat: Quaternion;
+  /** Dynamic bodies: world pose of the last two fixed steps, for render interpolation. */
+  prevPos: Vector3;
+  prevQuat: Quaternion;
+  currPos: Vector3;
+  currQuat: Quaternion;
+  /** `prev` and `curr` differ: the object shows an interpolated pose each frame. */
+  moving: boolean;
   /** `applyForce` was used and the fixed steps have not consumed it yet. */
   forced: boolean;
 }
@@ -71,6 +78,11 @@ export function createState(obj: GameObj): PhysState {
     bottom: 0,
     lastPos: new Vector3(Number.NaN, 0, 0),
     lastQuat: new Quaternion(),
+    prevPos: new Vector3(),
+    prevQuat: new Quaternion(),
+    currPos: new Vector3(),
+    currQuat: new Quaternion(),
+    moving: false,
     forced: false,
   };
 }

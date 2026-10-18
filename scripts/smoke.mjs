@@ -39,8 +39,8 @@ for (const name of examples) {
   const errors = [];
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
   page.on("pageerror", (e) => errors.push(String(e)));
-  // renderer=webgl: headless Chrome has no WebGPU adapter.
-  await page.goto(`${base}${name}/index.html?renderer=webgl`);
+  // "auto" renderer: WebGPU when the headless browser has an adapter, WebGL2 otherwise.
+  await page.goto(`${base}${name}/index.html`);
   try {
     await page.waitForFunction(
       () => globalThis.k?.isLoaded?.() && globalThis.k.time() > 0.5,

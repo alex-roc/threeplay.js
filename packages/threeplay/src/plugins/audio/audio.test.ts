@@ -181,8 +181,70 @@ describe("audio context", () => {
     expect(ctxOf().resume).not.toHaveBeenCalled();
     win.dispatchEvent(new Event("keydown"));
     expect(ctxOf().resume).toHaveBeenCalledTimes(1);
-    win.dispatchEvent(new Event("pointerdown")); // listeners are gone
+    win.dispatchEvent(new Event("pointerup")); // the context is running: listeners are gone
+    win.dispatchEvent(new Event("click"));
     expect(ctxOf().resume).toHaveBeenCalledTimes(1);
+  });
+
+  it("unlocks on the events touch screens count (not pointerdown) and keeps listening until running", async () => {
+    const win = new EventTarget();
+    g.window = win;
+    const k = make();
+    win.dispatchEvent(new Event("pointerdown")); // does not count as a gesture
+    win.dispatchEvent(new Event("touchstart"));
+    k.audioCtx;
+    expect(ctxOf().resume).not.toHaveBeenCalled();
+    // A tap that ended before any audio was used must not use the listeners up...
+    const early = make();
+    win.dispatchEvent(new Event("touchend"));
+    early.audioCtx; // created after the gesture: resumed at once (best effort)
+    expect(created[1].resume).toHaveBeenCalledTimes(1);
+    // ...and a context that stays suspended keeps the listeners for the next gesture.
+    created[1].state = "suspended";
+    created[1].resume = vi.fn(() => Promise.resolve());
+    win.dispatchEvent(new Event("pointerup"));
+    await Promise.resolve();
+    win.dispatchEvent(new Event("click"));
+    expect(created[1].resume).toHaveBeenCalledTimes(2);
+  });
+
+  it("loadSound decodes offline and creates no AudioContext before it is needed", async () => {
+    const decoded: unknown[] = [];
+    class FakeOffline {
+      constructor(
+        public channels: number,
+        public length: number,
+        public sampleRate: number,
+      ) {}
+      decodeAudioData() {
+        decoded.push(this);
+        return Promise.resolve({ duration: 3 });
+      }
+    }
+    g.OfflineAudioContext = FakeOffline;
+    try {
+      const k = make();
+      await loaded(k);
+      expect(created.length).toBe(0);
+      expect(decoded).toHaveLength(1);
+      expect(() => k.play("boom")).not.toThrow(); // now the real context appears
+      expect(created.length).toBe(1);
+    } finally {
+      delete g.OfflineAudioContext;
+    }
+  });
+
+  it("never creates a context after quit()", async () => {
+    const k = make();
+    await loaded(k);
+    k.quit();
+    created = [];
+    expect(k.audioCtx).toBeNull();
+    k.beep();
+    const p = k.play("boom");
+    await p.ended;
+    expect(await k.loadSound("again", "x.ogg")).toBeNull();
+    expect(created.length).toBe(0);
   });
 
   it("master volume reaches the master gain, even when set before the context exists", () => {
@@ -304,6 +366,26 @@ describe("positional sound", () => {
     o.destroy();
     k.step(0.016);
     expect((po.positionX as { value: number }).value).toBe(5);
+  });
+
+  it("a looping sound attached to an object stops with it; one-shots play on", async () => {
+    const k = make();
+    await loaded(k);
+    const o = k.add([k.pos(5, 0, 0)]);
+    const loop = k.play("boom", { at: o, loop: true });
+    const once = k.play("boom", { at: o });
+    let loopEnded = false;
+    loop.ended.then(() => {
+      loopEnded = true;
+    });
+    k.step(0.016);
+    o.destroy();
+    k.step(0.016);
+    await Promise.resolve();
+    expect(loopEnded).toBe(true);
+    expect(ctxOf().sources[0].stopped).toBe(1);
+    expect(ctxOf().sources[1].stopped).toBe(0);
+    once.stop();
   });
 
   it("stopped sounds are no longer updated", async () => {

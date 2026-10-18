@@ -14,8 +14,8 @@ export interface PlayOpts {
   /**
    * Positional sound at a point or following an object (attenuates with
    * distance to the camera, pans with its orientation). A vector is read
-   * every frame, so mutating it moves the sound; a destroyed object leaves
-   * the sound where it was.
+   * every frame, so mutating it moves the sound. When the object is destroyed
+   * a one-shot sound finishes where it was, but a `loop` sound **stops** with it.
    */
   at?: Vec3Like | GameObj;
   /** Spatialization model for positional sounds (default `"HRTF"`; `"equalpower"` is cheaper). */
@@ -58,12 +58,18 @@ export interface BeepOpts {
  * API of the audio plugin (WebAudio). Without WebAudio (Node, old browsers)
  * everything is inert: `play()` returns a handle that ends at once.
  *
- * Sounds keep playing across scenes unless you `stop()` them.
+ * Sounds keep playing across scenes unless you `stop()` them (the exception: looping
+ * sounds attached to an object with `at` stop when that object is destroyed, e.g. by `go()`).
+ * After `quit()` no new AudioContext is created.
  */
 export interface AudioAPI {
   /** The shared AudioContext, created on first use (`null` when unavailable, e.g. in Node). */
   readonly audioCtx: AudioContext | null;
-  /** Loads and decodes a sound under a name (the first scene waits for it). Resolves `null` without audio. */
+  /**
+   * Loads and decodes a sound under a name (the first scene waits for it). Resolves `null`
+   * without audio. Decoding uses an `OfflineAudioContext` when available, so no real
+   * AudioContext is created before the first `play()`/`beep()`/`audioCtx` access.
+   */
   loadSound(name: string, url: string): Promise<AudioBuffer | null>;
   /** Plays a loaded sound. Throws (listing the loaded names) for an unknown name. */
   play(name: string, opts?: PlayOpts): AudioPlay;

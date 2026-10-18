@@ -6,7 +6,6 @@ threeplay({
   width: 960,
   height: 540,
   background: "#cdeac0",
-  renderer: new URLSearchParams(location.search).get("renderer") ?? "auto",
   buttons: {
     left: { keyboard: ["left", "a"], gamepad: "dpad-left" },
     right: { keyboard: ["right", "d"], gamepad: "dpad-right" },

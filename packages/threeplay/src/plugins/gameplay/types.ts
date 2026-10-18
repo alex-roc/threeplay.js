@@ -77,7 +77,7 @@ export interface OffscreenOpts {
   distance?: number;
   /** Destroy it when offscreen (default `false`). */
   destroy?: boolean;
-  /** Also count objects outside the camera frustum (default `false`; uses `mesh`'s bounds if it has one). */
+  /** Also count objects outside the camera frustum (default `false`; uses a bounding sphere of `mesh`, computed once from its geometry, so it does not follow later geometry changes or skeletal animation). */
   frustum?: boolean;
 }
 

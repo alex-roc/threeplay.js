@@ -16,7 +16,8 @@ Common game-logic components. No dependencies.
   `obj.paused` stops them) and die with it. Same signatures as the `k.` versions.
 - `offscreen({ distance = 100, destroy = false, frustum = false })` — `isOffScreen()`,
   events `"exitScreen"` / `"enterScreen"` (`onExitScreen`, `onEnterScreen`). Distance is measured
-  to `k.camera3d`; `frustum` also tests the camera view (the `mesh` bounds if the object has one).
+  to `k.camera3d`; `frustum` also tests the camera view against a bounding sphere of the object's `mesh`, computed once from
+  its geometry and then only transformed (cheap, but static: it ignores geometry edits and skinned poses).
 
 ## Example
 

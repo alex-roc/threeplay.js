@@ -11,6 +11,8 @@ const _pos = new Vector3();
 const _fwd = new Vector3();
 const _up = new Vector3();
 const _q = new Quaternion();
+/** Sample rate of the decoding-only context (most devices run at 48 kHz). */
+const OFFLINE_RATE = 48000;
 
 /** Built-in plugin: WebAudio `play`, `loadSound`, `beep` and positional sound. */
 export const audioPlugin = definePlugin<AudioAPI>({
@@ -20,14 +22,18 @@ export const audioPlugin = definePlugin<AudioAPI>({
     let master: GainNode | null = null;
     let masterVolume = 1;
     let failed = false;
+    // After `quit()` no context may be created (a late `play()` would leak one).
+    let closed = false;
     // Becomes true after the first user gesture (autoplay policy).
     let unlocked = false;
+    /** Decodes sounds before there is a context (see `decoder`). */
+    let offline: BaseAudioContext | null = null;
     const sounds = new Map<string, AudioBuffer>();
     const active = new Set<SoundPlay>();
 
     /** The shared context, created on first use. `null` without WebAudio. */
     function getCtx(): AudioContext | null {
-      if (ctx || failed) return ctx;
+      if (ctx || failed || closed) return ctx;
       const g = globalThis as unknown as {
         AudioContext?: typeof AudioContext;
         webkitAudioContext?: typeof AudioContext;
@@ -52,16 +58,23 @@ export const audioPlugin = definePlugin<AudioAPI>({
       if (ctx && ctx.state === "suspended") ctx.resume().catch(() => {});
     }
 
-    // Browsers keep the context suspended until a user gesture.
+    // Browsers keep the context suspended until a user gesture. Touch screens only count the
+    // *end* of a tap (`pointerdown`/`touchstart` do not activate the page), so listen to the
+    // events that do. The listeners stay until a context is actually running: a gesture before
+    // the first `play()` must not use them up.
     const win = typeof window !== "undefined" ? window : null;
-    const gestures = ["pointerdown", "keydown"] as const;
+    const gestures = ["pointerup", "touchend", "click", "keydown"] as const;
     const stopListening = () => {
       for (const type of gestures) win?.removeEventListener(type, onGesture);
     };
     const onGesture = () => {
       unlocked = true;
-      resume();
-      stopListening();
+      if (!ctx) return; // nothing to resume yet: keep listening
+      if (ctx.state === "running") return stopListening();
+      ctx.resume().then(
+        () => ctx?.state === "running" && stopListening(),
+        () => {},
+      );
     };
     for (const type of gestures) win?.addEventListener(type, onGesture);
 
@@ -81,25 +94,53 @@ export const audioPlugin = definePlugin<AudioAPI>({
     });
 
     k.onQuit(() => {
+      closed = true;
       stopListening();
       for (const play of [...active]) play.stop();
       ctx?.close().catch(() => {});
       ctx = null;
       master = null;
+      offline = null;
     });
 
     // Same rule as the assets plugin: absolute URLs are never prefixed.
     const resolve = (url: string) =>
       /^([a-z][a-z0-9+.-]*:|\/)/i.test(url) ? url : (k.loadRoot?.() ?? "") + url;
 
+    /**
+     * What decodes the sounds. Loading happens before any gesture, and a real `AudioContext`
+     * created then stays suspended and makes browsers warn: use an `OfflineAudioContext`
+     * (its buffers play in any context) and only fall back to the real one without it.
+     */
+    function decoder(): BaseAudioContext | null {
+      if (ctx) return ctx;
+      if (closed) return null;
+      const g = globalThis as unknown as {
+        OfflineAudioContext?: typeof OfflineAudioContext;
+        webkitOfflineAudioContext?: typeof OfflineAudioContext;
+      };
+      const Offline = g.OfflineAudioContext ?? g.webkitOfflineAudioContext;
+      if (Offline && !failed) {
+        try {
+          offline ??= new Offline(1, 1, OFFLINE_RATE);
+          return offline;
+        } catch {
+          // fall through to the real context
+        }
+      }
+      return getCtx();
+    }
+
     function loadSound(name: string, url: string) {
       const task = (async () => {
-        const c = getCtx();
-        if (!c) return null;
+        if (!decoder()) return null;
         const res = await fetch(resolve(url));
         if (!res.ok)
           throw new Error(`Could not load sound "${name}" from ${url}: HTTP ${res.status}`);
-        const buffer = await c.decodeAudioData(await res.arrayBuffer());
+        const data = await res.arrayBuffer();
+        const c = decoder(); // the engine may have quit while fetching
+        if (!c) return null;
+        const buffer = await c.decodeAudioData(data);
         sounds.set(name, buffer);
         return buffer;
       })();

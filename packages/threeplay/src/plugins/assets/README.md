@@ -16,7 +16,8 @@ logged by the core, not fatal).
 - `model(name, opts)` — component (id `"shape"`, `shape: { kind: "model" }`, `mesh` = the instance
   root, a child of `object3d`). Throws if the model is not loaded. Options: `scale`, `shadows`
   (default `true`), `groundAlign`, `anim` (start looping), `faceForward` (default `true`),
-  `uniqueMaterials` (default `false`).
+  `uniqueMaterials` (default `false`; adding `color()` or `opacity()` to a model clones its
+  materials automatically, see Notes).
 - Animations: `anims`, `playAnim(name, { loop = true, speed = 1, fade = 0.2 })` (cross-fades;
   calling it again for the running animation only updates the speed), `stopAnim()`, `curAnim()`,
   `onAnimEnd(fn)` (object event `"animEnd"`, for non-looping animations), `mixer`.
@@ -27,7 +28,10 @@ logged by the core, not fatal).
 - glTF faces **+Z**, the engine's forward is **−Z**: `faceForward` turns the instance 180° around Y
   so the model faces `forward()`. Pass `faceForward: false` for models authored facing −Z.
 - Instances are `SkeletonUtils.clone`s: geometry and materials are shared with the template.
-  Use `uniqueMaterials: true` to tint or fade a single instance.
+  Adding `color()` or `opacity()` to a model instance clones its materials first (as
+  `uniqueMaterials: true` would), so tinting or fading one instance never changes the others or the
+  template; instances without them keep sharing. The clones are disposed with the object
+  (textures stay shared with the template).
 - The mixer ticks in the component's `update()` with `k.dt()`, so paused objects freeze.
 
 ## Example

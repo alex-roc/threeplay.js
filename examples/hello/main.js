@@ -1,6 +1,6 @@
 import threeplay from "threeplay";
 
-threeplay({ renderer: new URLSearchParams(location.search).get("renderer") ?? "auto" });
+threeplay();
 
 // A floor, a falling box and a camera that orbits around them.
 add([box(10, 0.5, 10), pos(0, -0.25, 0), color("#90be6d"), area(), body({ isStatic: true })]);

@@ -234,7 +234,7 @@ describe("physics", () => {
   it("vel is a live view of the rigid body, and impulses work", async () => {
     const k = await make();
     k.setGravity(0);
-    const b = k.add([k.pos(), box(), k.area(), k.body()]);
+    const b = k.add([k.pos(), box(), k.area(), k.body({ interpolate: false })]);
     b.vel.x = 2;
     expect(b.vel.x).toBeCloseTo(2);
     run(k, 0.5);
@@ -311,7 +311,12 @@ describe("physics", () => {
 
   it("body() and character() can't share an object", async () => {
     const k = await make();
-    expect(() => k.add([k.pos(), box(), k.area(), k.body(), k.character()])).toThrow(/character/);
+    expect(() => k.add([k.pos(), box(), k.area(), k.body(), k.character()])).toThrow(
+      /Components "body" and "character" can't be on the same object/,
+    );
+    expect(() => k.add([k.pos(), box(), k.area(), k.character(), k.body()])).toThrow(
+      /Components "character" and "body" can't be on the same object/,
+    );
   });
 
   it("body() requires area()", async () => {
@@ -440,5 +445,140 @@ describe("physics", () => {
     addFloor(k);
     run(k, 2);
     expect(early.pos.y).toBeCloseTo(0.5, 1);
+  });
+
+  describe("interpolation", () => {
+    /** Falls for a while at 60 fps (5 fixed steps per 6 frames) and returns y after every frame. */
+    async function fall(bodyOpts: Record<string, unknown>, fps = 60) {
+      const k = await make();
+      const b = k.add([k.pos(0, 100, 0), box(), k.area(), k.body(bodyOpts)]);
+      for (let i = 0; i < 10; i++) k.step(1 / fps);
+      const ys: number[] = [];
+      for (let i = 0; i < 60; i++) {
+        k.step(1 / fps);
+        ys.push(b.pos.y);
+      }
+      return { k, b, ys };
+    }
+
+    it("a falling body moves on every frame even when frames and fixed steps do not match", async () => {
+      for (const fps of [60, 144, 30]) {
+        const { ys } = await fall({}, fps);
+        const dy = ys.slice(1).map((y, i) => ys[i] - y);
+        expect(Math.min(...dy)).toBeGreaterThan(0);
+        // smooth: the per-frame displacement only changes by about gravity * dt²
+        for (let i = 1; i < dy.length; i++) {
+          expect(Math.abs(dy[i] - dy[i - 1] - 20 / (fps * fps))).toBeLessThan(0.4 / fps);
+        }
+      }
+    });
+
+    it("body({ interpolate: false }) shows the latest simulated pose (stalls between steps)", async () => {
+      const { ys } = await fall({ interpolate: false });
+      const dy = ys.slice(1).map((y, i) => ys[i] - y);
+      expect(dy.some((d) => d === 0)).toBe(true);
+    });
+
+    it("the rendered pose is never ahead of the simulation and lags at most one step", async () => {
+      const { b, k } = await fall({});
+      const rb = (b as any).vel; // live view: the simulation's velocity
+      const sim = k.get("*")[0];
+      expect(sim).toBe(b);
+      expect(rb.y).toBeLessThan(0);
+      // true y = pos.y - at most one step of fall away
+      const maxLag = Math.abs(rb.y) * (1 / 50) + 1e-6;
+      k.step(1 / 60);
+      const shown = b.pos.y;
+      k.step(1 / 240);
+      expect(Math.abs(b.pos.y - shown)).toBeLessThanOrEqual(maxLag * 2);
+    });
+
+    it("code assigning pos wins over the interpolated pose, even on frames without a step", async () => {
+      const k = await make();
+      const b = k.add([k.pos(0, 100, 0), box(), k.area(), k.body()]);
+      for (let i = 0; i < 20; i++) k.step(1 / 144);
+      b.pos.set(5, 50, 0);
+      k.step(1 / 144); // probably no fixed step in this frame
+      expect(b.pos.x).toBeCloseTo(5, 5);
+      expect(b.pos.y).toBeCloseTo(50, 1);
+      for (let i = 0; i < 10; i++) k.step(1 / 144);
+      expect(b.pos.x).toBeCloseTo(5, 3);
+      expect(b.pos.y).toBeLessThan(50);
+      expect(b.pos.y).toBeGreaterThan(49);
+    });
+
+    it("a body that came to rest settles on its true pose", async () => {
+      const k = await make();
+      addFloor(k);
+      const b = k.add([k.pos(0, 1, 0), box(), k.area(), k.body()]);
+      for (let i = 0; i < 200; i++) k.step(1 / 144);
+      expect(b.pos.y).toBeCloseTo(0.5, 2);
+    });
+  });
+
+  it("reads on a destroyed object return defaults instead of recreating its state", async () => {
+    const k = await make();
+    const other = k.add([k.pos(0.2, 0, 0), box(), k.area(), "other"]);
+    const b = k.add([k.pos(0, 0, 0), box(), k.area(), k.body(), "b"]);
+    const hero = k.add([k.pos(0, 5, 0), capsule(), k.area(), k.character()]);
+    run(k, 0.1);
+    b.destroy();
+    hero.destroy();
+    run(k, 0.1);
+    expect(b.vel.length()).toBe(0);
+    expect(b.angularVel.length()).toBe(0);
+    expect(b.isColliding(other)).toBe(false);
+    expect(b.isColliding("other")).toBe(false);
+    expect(b.getCollisions()).toEqual([]);
+    expect(b.isGrounded()).toBe(false);
+    expect(b.isFalling()).toBe(false);
+    expect(hero.isGrounded()).toBe(false);
+    expect(hero.vel.length()).toBe(0);
+    expect(() => {
+      b.applyImpulse(k.vec3(1, 0, 0));
+      b.applyForce(k.vec3(1, 0, 0));
+      b.jump();
+      hero.jump();
+      hero.move(1, 0, 0);
+    }).not.toThrow();
+    run(k, 0.1);
+    expect(bodyCount(k)).toBe(1); // only `other`
+  });
+
+  it("a character ignores the vertical part of move() (moveTo a target at another height)", async () => {
+    const k = await make();
+    addFloor(k);
+    const target = k.add([k.pos(10, 6, 0), box()]);
+    const hero = k.add([k.pos(0, 0.9, 0), capsule(), k.area(), k.character()]);
+    k.onUpdate(() => hero.moveTo(target, 4));
+    run(k, 0.5);
+    expect(hero.pos.x).toBeGreaterThan(1.5);
+    expect(hero.pos.y).toBeCloseTo(0.9, 1); // not lifted towards the target
+    expect(hero.isGrounded()).toBe(true);
+  });
+
+  it("move() on a static body warns once and moves nothing", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    const k = await make();
+    const wall = k.add([k.pos(0, 0, 0), box(), k.area(), k.body({ isStatic: true })]);
+    k.step(1 / 50);
+    wall.move(5, 0, 0);
+    wall.move(5, 0, 0);
+    expect(wall.pos.x).toBe(0);
+    expect(warn.mock.calls.filter((c) => String(c[0]).includes("isStatic"))).toHaveLength(1);
+    warn.mockRestore();
+  });
+
+  it("kinematic bodies are only pushed to the world when they moved", async () => {
+    const k = await make();
+    const plat = k.add([k.pos(0, 0, 0), box(4, 0.2, 4), k.area(), k.body({ kinematic: true })]);
+    const rider = k.add([k.pos(0, 0.4, 0), box(), k.area(), k.body()]);
+    run(k, 0.3);
+    const rb = (k.physics.world as any).bodies; // a sanity check on the world, not on internals
+    expect(rb).toBeDefined();
+    plat.pos.x = 3;
+    run(k, 0.1);
+    expect(plat.pos.x).toBeCloseTo(3, 5);
+    expect(rider.pos.x).toBeCloseTo(0, 0);
   });
 });

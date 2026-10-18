@@ -2,6 +2,7 @@ import { BoxGeometry, Mesh, MeshBasicMaterial, Ray, Vector2, Vector3 } from "thr
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createEngine } from "../../core/engine";
 import type { Engine, PluginLike } from "../../core/types";
+import { physicsPlugin } from "../physics";
 import { renderPlugin } from "../render";
 import { transformPlugin } from "../transform";
 import { debugPlugin } from ".";
@@ -222,6 +223,42 @@ describe("inspector", () => {
     k.debug.inspect = true;
     k.step(0.016);
     expect(helpers(k)).toBeUndefined();
+  });
+
+  it("outlines meshes with physics: false (the inert physics draws no colliders)", () => {
+    const k = createEngine({ loop: "manual", renderer: "none", physics: false }, [
+      renderPlugin,
+      transformPlugin,
+      physicsPlugin,
+      debugPlugin,
+    ]) as Engine;
+    k.add([meshComp()]);
+    k.debug.inspect = true;
+    k.step(0.016);
+    expect(helpers(k)?.children.length).toBe(1);
+  });
+
+  it("prevents the browser default of the debug key on the canvas", () => {
+    const canvas = new EventTarget() as unknown as HTMLCanvasElement;
+    const render: PluginLike = {
+      name: "render",
+      install: () => ({ canvas, overlay: () => null }),
+    };
+    const k = createEngine({ loop: "manual", renderer: "none" }, [
+      render,
+      transformPlugin,
+      fakeInput([]),
+      debugPlugin,
+    ]) as Engine;
+    const send = (key: string) => {
+      const e = Object.assign(new Event("keydown", { cancelable: true }), { key });
+      canvas.dispatchEvent(e);
+      return e.defaultPrevented;
+    };
+    expect(send("F1")).toBe(true);
+    expect(send("a")).toBe(false);
+    k.quit();
+    expect(send("F1")).toBe(false);
   });
 
   it("hovered() picks the nearest visible object under the mouse ray", () => {

@@ -30,18 +30,27 @@ packages/threeplay/src/
   graph *is* the object tree. `k.root.object3d` lives in `k.scene3d`.
 - **Components** are plain objects. `use()` copies their own property
   descriptors (fields, methods, getters/setters) onto the object; lifecycle keys
-  (`id require add update fixedUpdate destroy inspect`) are not copied but called
+  (`id require conflicts add update fixedUpdate destroy inspect`) are not copied but called
   with `this` bound to the object. A property clash throws an error naming both
-  owners. Same `id` = replacement. `require` is checked after the whole `add([...])`.
+  owners. Same `id` = replacement. `require` is checked after the whole `add([...])`;
+  `conflicts` (exclusive components) before merging.
 - **Loop.** `frame(dt)`: pending `go()` → `frameStart` hook → fixed steps
   (`beforeFixedUpdate`, objects' `fixedUpdate`, `afterFixedUpdate`; 50 Hz,
   max 5 substeps) → `beforeUpdate`, objects' `update`, `onUpdate` handlers and
-  timers, `afterUpdate` → `render(alpha)` → `frameEnd`. `dt` is clamped to `maxDt`
+  timers, `afterUpdate` (character controllers, then the camera), `lateUpdate`
+  (positions are final: `follow()`, rotation sync) → `render(alpha)` → `frameEnd`. `dt` is clamped to `maxDt`
   (0.1 s). `loop: "manual"` + `k.step(dt)` drives it deterministically (tests).
-- **Listener scopes.** A listener registered while a scene body or one of its
+- **Listener scopes.** Cancelled or finished controllers leave their scope at once
+  (no leak in long scenes). A listener registered while a scene body or one of its
   frames runs belongs to that scene and is cancelled by `go()`. A listener
   registered outside (top-level code, plugin `install`) is global and persists.
   This fixes kaplay's gotcha where `go()` also removed top-level listeners.
+- **Errors.** An exception escaping a frame stops the loop (instead of freezing
+  silently or repeating every frame), logs it and emits the `error` hook; the render
+  plugin shows it over the game.
+- **Events.** `k.on`/`k.trigger` share one namespace with the user. Events that only plugins use
+  (input, render's resize) are named `threeplay:<event>`; the object events documented to users
+  (`collide`, `ground`, `hurt`, state events...) keep their plain names.
 - **Hooks** (`k.hooks.on/emit`) are system events for plugins; never scoped.
   Plugins add hooks by augmenting `EngineHooks`.
 - **Loading.** `k.load(promise)` registers a task; scenes start only after every
@@ -77,12 +86,14 @@ export const myPlugin = definePlugin<MyAPI>({
   - `RendererBackend` (render), `PhysicsBackend` (physics): swap the engine below.
   - `debugInspect` hook (debug): physics draws colliders while it is on.
   - `color`/`opacity` comps expose `obj.color` / `obj.opacity`; the HUD reads them.
+  - `ShapeComp.isolateMaterials?()` (shapes): a shape whose materials may be shared (`model()`)
+    clones them on request; `color()`/`opacity()` call it before writing.
 
 ## Built-in plugins and install order
 
 `render → transform → shapes → physics → input → camera → hud → assets → audio
 → level → gameplay → debug`. Hooks run in install order, so physics' `afterUpdate`
-(character controllers) runs before the camera's. `threeplay({ core: [...] })` replaces the list
+(character controllers) and `beforeUpdate` (interpolated poses of dynamic bodies) run before the camera's. `threeplay({ core: [...] })` replaces the list
 (e.g. a headless server without render/input/audio).
 
 ## Builds

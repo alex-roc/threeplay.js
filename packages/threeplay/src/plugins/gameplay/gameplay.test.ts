@@ -1,4 +1,5 @@
-import { describe, expect, it } from "vitest";
+import { Box3, BoxGeometry, Mesh } from "three";
+import { describe, expect, it, vi } from "vitest";
 import { createEngine } from "../../core/engine";
 import type { Engine } from "../../core/types";
 import { renderPlugin } from "../render";
@@ -216,5 +217,36 @@ describe("offscreen", () => {
     k.step(0.016);
     expect(front.isOffScreen()).toBe(false);
     expect(behind.isOffScreen()).toBe(true);
+  });
+
+  it("frustum test of a mesh uses its cached bounds, scaled and moved with the object", () => {
+    const k = make();
+    k.camera3d.position.set(0, 0, 0);
+    k.camera3d.lookAt(0, 0, -1);
+    k.camera3d.updateMatrixWorld();
+    const spy = vi.spyOn(Box3.prototype, "setFromObject");
+    // Its origin is far to the side (outside the view) but a 20 m wide box reaches into it.
+    const big = k.add([
+      k.pos(18, 0, -10),
+      k.scale(2),
+      { mesh: new Mesh(new BoxGeometry(10, 1, 1)) },
+      k.offscreen({ frustum: true }),
+    ]);
+    big.object3d.add(big.mesh as Mesh);
+    const small = k.add([
+      k.pos(18, 0, -10),
+      { mesh: new Mesh(new BoxGeometry(1, 1, 1)) },
+      k.offscreen({ frustum: true }),
+    ]);
+    small.object3d.add(small.mesh as Mesh);
+    k.step(0.016);
+    expect(big.isOffScreen()).toBe(false);
+    expect(small.isOffScreen()).toBe(true);
+    big.pos.x = 100; // moving the object moves the cached bounds
+    k.step(0.016);
+    expect(big.isOffScreen()).toBe(true);
+    for (let i = 0; i < 3; i++) k.step(0.016);
+    expect(spy).not.toHaveBeenCalled();
+    spy.mockRestore();
   });
 });

@@ -2,6 +2,7 @@ import { type Color, Fog, FogExp2, Vector2, type Vector3 } from "three";
 import { definePlugin } from "../../core/engine";
 import { toColor } from "../../core/math";
 import type { ColorLike, Engine } from "../../core/types";
+import type { Vec3Like } from "../transform/types";
 import { createNoneBackend } from "./backends/none";
 import { barColor, computeLayout, type Layout, layoutChanged } from "./layout";
 import { createDefaultLights } from "./lighting";
@@ -133,7 +134,7 @@ export const renderPlugin = definePlugin<RenderAPI>({
       stage?.place(next, barColor(background));
       renderer.setSize(next.cssWidth, next.cssHeight, pixelRatio);
       syncCamera();
-      if (changed) k.trigger("resize");
+      if (changed) k.trigger("threeplay:resize");
     }
 
     // --- lighting -------------------------------------------------------------
@@ -180,6 +181,9 @@ export const renderPlugin = definePlugin<RenderAPI>({
       get ambient() {
         return lights?.ambient ?? null;
       },
+      setSunDirection(dir: Vec3Like) {
+        lights?.setDirection(dir);
+      },
       overlay: () => stage?.overlay ?? null,
       viewScale: () => layout!.scaleX,
       toScreen: (world: Vector3) =>
@@ -192,7 +196,7 @@ export const renderPlugin = definePlugin<RenderAPI>({
         real.render(k.scene3d, k.camera3d);
         return canvas.toDataURL("image/png");
       },
-      onResize: (fn: () => void) => k.on("resize", fn),
+      onResize: (fn: () => void) => k.on("threeplay:resize", fn),
       ...createLightComps(),
     };
   },

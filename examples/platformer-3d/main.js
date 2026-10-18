@@ -5,7 +5,6 @@ threeplay({
   width: 960,
   height: 540,
   background: "#8ecae6",
-  renderer: new URLSearchParams(location.search).get("renderer") ?? "auto",
 });
 
 // A custom component is just an object: fields and methods merge into the

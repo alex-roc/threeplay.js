@@ -24,9 +24,17 @@ k.scene("main", () => {
   update inside the frame (so scene scoping applies and results are deterministic).
   `onKeyDown`/`onButtonDown` fire every frame while held (in `beforeUpdate`); the
   pressed/released sets are cleared at `frameEnd`. A press + release inside one frame still
-  counts as pressed (and released) that frame. On window blur everything is released.
-- Every `on*` function is a thin layer over `k.on(...)` / `k.trigger(...)`, so listeners
-  registered in a scene die with it (`go()`), and top-level ones persist.
+  counts as pressed (and released) that frame. Everything is released when the window blurs, the
+  canvas loses focus (`blur`/`focusout`, e.g. clicking another element of the host page while
+  holding a key) or the tab is hidden.
+- While the loop is not running (loading, hidden tab) the queue keeps at most 512 events (the
+  oldest are dropped) and consecutive mouse moves merge into one entry, so `onMouseMove`
+  fires at most once per frame with the summed `delta`.
+- Every `on*` function is a thin layer over `k.on(...)` / `k.trigger(...)` with internal event
+  names prefixed `threeplay:` (`threeplay:keyPress`...), so they never collide with your own
+  events. Listeners registered in a scene die with it (`go()`), and top-level ones persist.
+- The mouse position is computed per axis from the canvas box and the logical size, so it is
+  right with `letterbox: false` (where X and Y scales differ).
 - **Keyboard is read on the canvas** (`canvas.tabIndex = 0`, `outline: none`, focused when
   loaded and on pointerdown). A host page can forward keys with
   `canvas.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowLeft" }))`.

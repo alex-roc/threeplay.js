@@ -11,7 +11,7 @@ import { inputPlugin } from ".";
  * A stand-in for the render plugin: a real DOM canvas and a camera ray that
  * always shoots from (0, 0, 10) towards −Z, whatever the screen point is.
  */
-function fakeRender(scale = 1) {
+function fakeRender(scale = 1, size?: { width: number; height: number }) {
   const canvas = document.createElement("canvas");
   document.body.appendChild(canvas);
   const plugin = definePlugin<Partial<RenderAPI>>({
@@ -19,6 +19,7 @@ function fakeRender(scale = 1) {
     install: () => ({
       canvas,
       viewScale: () => scale,
+      ...(size && { width: () => size.width, height: () => size.height }),
       center: () => new THREE.Vector2(400, 300),
       screenRay: () => new THREE.Ray(new THREE.Vector3(0, 0, 10), new THREE.Vector3(0, 0, -1)),
     }),
@@ -311,5 +312,54 @@ describe("input plugin on a DOM canvas", () => {
     canvas.dispatchEvent(key("keydown", { key: "a" }));
     k.step(0.016);
     expect(k.isKeyDown("a")).toBe(false);
+  });
+
+  it("maps the mouse per axis from the canvas box when the view is stretched", () => {
+    const { canvas, plugin } = fakeRender(2, { width: 400, height: 300 });
+    const k = createEngine({ loop: "manual" }, [plugin, transformPlugin, inputPlugin]) as Engine;
+    // 800x300 CSS px for a 400x300 logical view: X scale 2, Y scale 1
+    canvas.getBoundingClientRect = () =>
+      ({ left: 10, top: 20, width: 800, height: 300 }) as DOMRect;
+    window.dispatchEvent(new MouseEvent("mousemove", { clientX: 210, clientY: 120 }));
+    k.step(0.016);
+    expect(k.mousePos().toArray()).toEqual([100, 100]);
+  });
+
+  it("releases held keys when the canvas loses focus or the tab is hidden", () => {
+    for (const type of ["blur", "focusout"]) {
+      const { canvas, k } = make();
+      canvas.dispatchEvent(key("keydown", { key: "w" }));
+      k.step(0.016);
+      expect(k.isKeyDown("w")).toBe(true);
+      canvas.dispatchEvent(new FocusEvent(type));
+      k.step(0.016);
+      expect(k.isKeyDown("w")).toBe(false);
+    }
+    const { canvas, k } = make();
+    canvas.dispatchEvent(key("keydown", { key: "w" }));
+    k.step(0.016);
+    const hidden = vi.spyOn(document, "visibilityState", "get").mockReturnValue("hidden");
+    document.dispatchEvent(new Event("visibilitychange"));
+    hidden.mockRestore();
+    k.step(0.016);
+    expect(k.isKeyDown("w")).toBe(false);
+  });
+
+  it("coalesces mouse moves and caps the queue while the loop is not running", () => {
+    const { canvas, k } = make();
+    const moves: number[][] = [];
+    k.onMouseMove((pos, delta) => moves.push([pos.x, delta.x]));
+    for (let i = 1; i <= 2000; i++) {
+      window.dispatchEvent(new MouseEvent("mousemove", { clientX: i, clientY: 0, movementX: 1 }));
+    }
+    k.step(0.016);
+    expect(moves).toEqual([[2000, 2000]]); // one entry, deltas summed
+    // other events are capped (oldest dropped), the newest survive
+    const presses: string[] = [];
+    k.onKeyPress((key) => presses.push(key));
+    for (let i = 0; i < 1000; i++) canvas.dispatchEvent(key("keydown", { key: "a", repeat: true }));
+    canvas.dispatchEvent(key("keydown", { key: "z" }));
+    k.step(0.016);
+    expect(presses.at(-1)).toBe("z");
   });
 });

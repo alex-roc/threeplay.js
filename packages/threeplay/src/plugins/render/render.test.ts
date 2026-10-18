@@ -143,6 +143,25 @@ describe("sun shadow box", () => {
     lights.dispose();
     expect(k.scene3d.children).not.toContain(lights.sun);
   });
+
+  it("setDirection() re-aims the sun and follow() keeps that direction", () => {
+    const k = make();
+    const lights = createDefaultLights(k.scene3d, true);
+    const cam = new PerspectiveCamera();
+    cam.position.set(0, 10, 10);
+    cam.lookAt(0, 0, 0);
+    cam.updateMatrixWorld();
+    lights.setDirection({ x: 0, y: -1, z: 0 }); // straight down
+    lights.follow(cam);
+    const off = lights.sun.position.clone().sub(lights.sun.target.position);
+    expect(off.x).toBeCloseTo(0, 3);
+    expect(off.z).toBeCloseTo(0, 3);
+    expect(off.y).toBeGreaterThan(30);
+    lights.follow(cam);
+    expect(lights.sun.position.clone().sub(lights.sun.target.position).y).toBeCloseTo(off.y, 5);
+    expect(() => lights.setDirection({ x: 0, y: 0, z: 0 })).toThrow(/non-zero direction/);
+    lights.dispose();
+  });
 });
 
 describe("render plugin (headless)", () => {
@@ -239,6 +258,19 @@ describe("render plugin (headless)", () => {
     expect(k.sun!.target.position.x).toBeCloseTo(200, 0);
   });
 
+  it("setSunDirection() survives the follow logic; it is a no-op without lighting", () => {
+    const k = make();
+    k.setSunDirection({ x: 1, y: -1, z: 0 });
+    k.camera3d.position.set(0, 10, 10);
+    k.camera3d.lookAt(0, 0, 0);
+    k.step(0.016);
+    k.step(0.016);
+    const off = k.sun!.position.clone().sub(k.sun!.target.position).normalize();
+    expect(off.x).toBeCloseTo(-Math.SQRT1_2, 3); // the sun sits on the opposite side
+    expect(off.y).toBeCloseTo(Math.SQRT1_2, 3);
+    expect(() => make({ lighting: "none" }).setSunDirection({ x: 0, y: -1, z: 0 })).not.toThrow();
+  });
+
   it("onResize is scene scoped like other listeners", () => {
     const k = make();
     let global = 0;
@@ -249,10 +281,10 @@ describe("render plugin (headless)", () => {
     });
     k.scene("b", () => {});
     k.go("a");
-    k.trigger("resize");
+    k.trigger("threeplay:resize");
     expect([global, scoped]).toEqual([1, 1]);
     k.go("b");
-    k.trigger("resize");
+    k.trigger("threeplay:resize");
     expect([global, scoped]).toEqual([2, 1]);
   });
 

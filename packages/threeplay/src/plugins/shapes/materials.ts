@@ -23,18 +23,24 @@ export function defaultMaterial(): MeshStandardMaterial {
  * not resolved here (the texture may not be loaded yet): the caller does it.
  */
 export function createMaterial(opts: MaterialOpts): Material {
-  const params: Record<string, unknown> = {
-    color: opts.map ? 0xffffff : 0xdddddd,
-    wireframe: opts.wireframe,
-    flatShading: opts.flatShading,
-  };
+  // Only keys that are set: three warns about parameters passed as `undefined`.
+  const params: Record<string, unknown> = { color: opts.map ? 0xffffff : 0xdddddd };
+  if (opts.wireframe !== undefined) params.wireframe = opts.wireframe;
+  if (opts.flatShading !== undefined) params.flatShading = opts.flatShading;
   if (opts.emissive !== undefined) params.emissive = toColor(opts.emissive);
   if (opts.emissiveIntensity !== undefined) params.emissiveIntensity = opts.emissiveIntensity;
   switch (opts.type ?? "standard") {
     case "basic":
-      return new MeshBasicMaterial({ color: params.color as number, wireframe: opts.wireframe });
-    case "toon":
-      return new MeshToonMaterial(params);
+      return new MeshBasicMaterial(
+        opts.wireframe === undefined
+          ? { color: params.color as number }
+          : { color: params.color as number, wireframe: opts.wireframe },
+      );
+    case "toon": {
+      // MeshToonMaterial has no `flatShading` (three warns if it is passed).
+      const { flatShading: _unsupported, ...toon } = params;
+      return new MeshToonMaterial(toon);
+    }
     case "lambert":
       return new MeshLambertMaterial(params);
     case "phong":
@@ -80,6 +86,19 @@ export function shareColor(root: Object3D | undefined | null, color: Color): voi
   for (const m of collectMaterials(root)) {
     if ("color" in m) (m as Material & { color: Color }).color = color;
   }
+}
+
+/**
+ * Counter on a mesh root that grows whenever the materials under it are swapped
+ * (`material()`), so `opacity()` knows its cached list is stale.
+ */
+export function materialsVersion(root: Object3D): number {
+  return (root.userData.materialsVersion as number | undefined) ?? 0;
+}
+
+/** Marks that the materials under `root` were replaced. */
+export function bumpMaterials(root: Object3D): void {
+  root.userData.materialsVersion = materialsVersion(root) + 1;
 }
 
 /** Materials whose `transparent` flag was set by the user, so opacity 1 doesn't clear it. */

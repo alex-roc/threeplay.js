@@ -303,6 +303,11 @@ describe("controllers", () => {
     expect(dist).toBeCloseTo(1.7);
     const opts = calls[0]![3] as { exclude: unknown[] };
     expect(opts.exclude).toContain(target);
+    // The list is built once, not every frame.
+    k.step(0.016);
+    k.step(0.016);
+    expect(calls).toHaveLength(3);
+    expect((calls[2]![3] as { exclude: unknown[] }).exclude).toBe(opts.exclude);
   });
 
   it("thirdPerson without physics keeps the full distance", () => {

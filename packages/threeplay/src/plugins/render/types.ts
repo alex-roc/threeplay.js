@@ -1,5 +1,6 @@
 import type * as THREE from "three";
 import type { ColorLike, Comp, EventController } from "../../core/types";
+import type { Vec3Like } from "../transform/types";
 
 /** Which three.js renderer draws the game. */
 export type RendererKind = "webgpu" | "webgl" | "none";
@@ -91,7 +92,11 @@ export interface RenderAPI {
   getBackground(): THREE.Color | null;
   /** Sets fog, or removes it with `null`. */
   setFog(fog: FogOpts | null): void;
-  /** The default lights (`null` with `lighting: "none"`). */
+  /**
+   * The default sun (`null` with `lighting: "none"`). Its `position` and `target` are rewritten every frame to follow the
+   * camera (so shadows stay sharp where you look): re-aim it with {@link setSunDirection}
+   * instead of moving it. Color, intensity and shadow settings can be changed freely.
+   */
   readonly sun: THREE.DirectionalLight | null;
   readonly ambient: THREE.HemisphereLight | null;
   /**
@@ -100,7 +105,17 @@ export interface RenderAPI {
    * the HUD; `null` when headless.
    */
   overlay(): HTMLElement | null;
-  /** CSS pixels per logical unit. */
+  /**
+   * Re-aims the default sun: `dir` is the direction the light travels (`{ x: -1, y: -2, z: -1 }`
+   * lights from above, from the +X/+Z side). The shadow box keeps following the camera. Does
+   * nothing with `lighting: "none"`; throws on a zero vector.
+   */
+  setSunDirection(dir: Vec3Like): void;
+  /**
+   * CSS pixels per logical unit, horizontally. With `letterbox: false` (stretched view) X and Y
+   * scales differ and this is the X one; derive Y as `canvas.getBoundingClientRect().height / height()`.
+   * Otherwise (letterboxed, or no fixed size) both axes are equal.
+   */
   viewScale(): number;
   /** Projects a world point to logical screen coordinates (`null` if behind the camera). */
   toScreen(world: THREE.Vector3): THREE.Vector2 | null;

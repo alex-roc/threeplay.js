@@ -1,4 +1,4 @@
-import { Box3, Frustum, Matrix4, type Object3D, Vector3 } from "three";
+import { Box3, type BufferGeometry, Frustum, Matrix4, type Object3D, Sphere, Vector3 } from "three";
 import { definePlugin } from "../../core/engine";
 import { lerp } from "../../core/math";
 import type { Engine } from "../../core/types";
@@ -10,8 +10,28 @@ import type { GameplayAPI, LifespanComp, OffscreenComp, OffscreenOpts } from "./
 
 export type * from "./types";
 
-const _box = new Box3();
+const _tmpBox = new Box3();
+const _rel = new Matrix4();
 const _pos = new Vector3();
+const _sphere = new Sphere();
+
+/**
+ * Bounding sphere of `mesh` in the local space of `node` (its owner), from the geometry
+ * bounds: computed once, then only transformed. `null` while there is no geometry yet.
+ */
+function localSphere(node: Object3D, mesh: Object3D): Sphere | null {
+  node.updateWorldMatrix(true, true);
+  const inverse = new Matrix4().copy(node.matrixWorld).invert();
+  const box = new Box3();
+  mesh.traverse((m) => {
+    const geometry = (m as { geometry?: BufferGeometry }).geometry;
+    if (!geometry) return;
+    geometry.boundingBox ?? geometry.computeBoundingBox();
+    _rel.multiplyMatrices(inverse, m.matrixWorld);
+    box.union(_tmpBox.copy(geometry.boundingBox!).applyMatrix4(_rel));
+  });
+  return box.isEmpty() ? null : box.getBoundingSphere(new Sphere());
+}
 
 /** Built-in plugin: `health`, `state`, `lifespan`, `timer` and `offscreen`. */
 export const gameplayPlugin = definePlugin<GameplayAPI>({
@@ -62,6 +82,8 @@ export const gameplayPlugin = definePlugin<GameplayAPI>({
       const distance = opts.distance ?? 100;
       // Starts "on screen": an object created offscreen fires `exitScreen` on its first frame.
       let off = false;
+      // Bounds of the object's mesh in its own space; cached, so a frame costs one transform.
+      let bounds: Sphere | null = null;
 
       /** Is this object beyond `distance` from the camera, or (optionally) outside its frustum? */
       const measure = (obj: ReturnType<typeof self>) => {
@@ -71,9 +93,10 @@ export const gameplayPlugin = definePlugin<GameplayAPI>({
         if (!opts.frustum) return false;
         const f = cameraFrustum();
         const mesh = obj.mesh as Object3D | undefined;
-        if (mesh) {
-          node.updateWorldMatrix(true, true);
-          return !f.intersectsBox(_box.setFromObject(mesh));
+        bounds ??= mesh ? localSphere(node, mesh) : null;
+        if (bounds) {
+          // `getWorldPosition` above refreshed the node's world matrix.
+          return !f.intersectsSphere(_sphere.copy(bounds).applyMatrix4(node.matrixWorld));
         }
         return !f.containsPoint(world);
       };

@@ -12,11 +12,17 @@ const _p = new Vector3();
 const _q = new Quaternion();
 const _s = new Vector3();
 const _pq = new Quaternion();
+const _wp = new Vector3();
+const _wq = new Quaternion();
+const _ip = new Vector3();
+const _iq = new Quaternion();
 const DOWN = { x: 0, y: -1, z: 0 };
 /** How far below the collider the ground probe still counts as grounded. */
 const GROUND_PROBE = 0.1;
 /** The probe starts this far inside the collider so touching surfaces are hit. */
 const PROBE_INSET = 0.05;
+/** The core drops the time backlog after this many fixed steps in one frame (see `frame()`). */
+const CORE_MAX_SUBSTEPS = 5;
 
 /**
  * The runtime behind `area()`, `body()` and `character()`: owns the per-object
@@ -36,6 +42,15 @@ export class PhysicsSystem {
   private readonly forced = new Set<PhysState>();
   private readonly contacts: ContactTracker;
   private warned = false;
+  private warnedStatic = false;
+  /**
+   * Mirror of the core's fixed-step accumulator (time not yet simulated): it
+   * gives the fraction of a step to interpolate dynamic bodies by, before the
+   * `render` hook (which receives it) runs.
+   */
+  private acc = 0;
+  /** Fixed steps run in the current frame. */
+  private steps = 0;
 
   constructor(readonly backend: RapierBackend | null) {
     this.contacts = new ContactTracker({
@@ -144,6 +159,7 @@ export class PhysicsSystem {
     s.desired.set(0, 0, 0);
     s.lastPos.copy(_p);
     s.lastQuat.copy(_q);
+    this.setPose(s, _p, _q);
     this.byCollider.set(collider.handle, s);
 
     if (s.kind === "character") {
@@ -191,25 +207,52 @@ export class PhysicsSystem {
   /** `beforeFixedUpdate`: create pending bodies and push code-driven transforms. */
   beforeFixed() {
     if (!this.backend?.ready) return;
-    for (const s of [...this.pending]) this.build(s);
+    if (this.pending.size > 0) for (const s of [...this.pending]) this.build(s);
     for (const s of this.driven) {
       this.worldTransform(s.obj);
+      if (_p.equals(s.lastPos) && _q.equals(s.lastQuat)) continue; // the body is already there
       s.rb!.setNextKinematicTranslation(_p);
       s.rb!.setNextKinematicRotation(_q);
-    }
-    for (const s of this.dynamics) {
-      this.worldTransform(s.obj);
-      if (_p.equals(s.lastPos) && _q.equals(s.lastQuat)) continue;
-      // Changed by code since physics last wrote it: teleport the body.
-      s.rb!.setTranslation(_p, true);
-      s.rb!.setRotation(_q, true);
       s.lastPos.copy(_p);
       s.lastQuat.copy(_q);
     }
+    for (const s of this.dynamics) this.adoptObjectPose(s);
+  }
+
+  /**
+   * Dynamic body whose object was moved by code since physics last wrote it:
+   * teleport the body there (no interpolation across the jump).
+   */
+  private adoptObjectPose(s: PhysState): boolean {
+    this.worldTransform(s.obj);
+    if (_p.equals(s.lastPos) && _q.equals(s.lastQuat)) return false;
+    s.rb!.setTranslation(_p, true);
+    s.rb!.setRotation(_q, true);
+    s.lastPos.copy(_p);
+    s.lastQuat.copy(_q);
+    this.setPose(s, _p, _q);
+    return true;
+  }
+
+  /** Makes `p`/`q` both the previous and the current pose of a body (nothing to interpolate). */
+  private setPose(s: PhysState, p: Vector3, q: Quaternion) {
+    s.prevPos.copy(p);
+    s.currPos.copy(p);
+    s.prevQuat.copy(q);
+    s.currQuat.copy(q);
+    s.moving = false;
+  }
+
+  /** `frameStart`: time that the fixed steps of this frame have to consume. */
+  frameStart(dt: number) {
+    this.acc += dt;
+    this.steps = 0;
   }
 
   /** `afterFixedUpdate`: step the world, copy bodies back and emit contacts. */
   afterFixed(dt: number) {
+    this.acc -= dt;
+    this.steps++;
     const be = this.backend;
     if (!be?.ready) return;
     be.step(dt);
@@ -219,23 +262,39 @@ export class PhysicsSystem {
       else this.contacts.end(h1, h2);
     });
     this.contacts.update();
-    for (const s of [...this.groundWatch]) {
-      if (!s.rb || !s.obj.exists()) continue;
-      const g = this.probeGround(s);
-      if (g && !s.grounded) s.obj.trigger("ground");
-      s.grounded = g;
+    if (this.groundWatch.size > 0) {
+      for (const s of [...this.groundWatch]) {
+        if (!s.rb || !s.obj.exists()) continue;
+        const g = this.probeGround(s);
+        if (g && !s.grounded) s.obj.trigger("ground");
+        s.grounded = g;
+      }
     }
     for (const s of this.forced) s.forced = true; // consumed by this step
   }
 
-  /** `beforeUpdate`: forces applied last frame have been used by the fixed steps. */
-  beforeUpdate() {
+  /**
+   * `beforeUpdate`: forces applied last frame have been used by the fixed steps,
+   * and dynamic bodies are shown at their interpolated pose (so `update` code and
+   * the camera, which runs in `afterUpdate`, both see it).
+   */
+  beforeUpdate(fixedDt: number) {
     for (const s of this.forced) {
       if (!s.forced) continue; // applied after the last step
       s.rb?.resetForces(false);
       s.rb?.resetTorques(false);
       this.forced.delete(s);
       s.forced = false;
+    }
+    if (!this.backend?.ready) return;
+    if (this.steps >= CORE_MAX_SUBSTEPS) this.acc = 0; // the core dropped the backlog
+    const alpha = fixedDt > 0 ? Math.min(Math.max(this.acc / fixedDt, 0), 1) : 1;
+    for (const s of this.dynamics) {
+      if (!s.moving) continue; // already shown at its true pose
+      if (this.adoptObjectPose(s)) continue; // code moved it: its value wins
+      _ip.lerpVectors(s.prevPos, s.currPos, alpha);
+      _iq.slerpQuaternions(s.prevQuat, s.currQuat, alpha);
+      this.place(s, _ip, _iq);
     }
   }
 
@@ -251,24 +310,49 @@ export class PhysicsSystem {
     obj.object3d.matrixWorld.decompose(_p, _q, _s);
   }
 
-  /** Writes a dynamic body's pose to its object (converted to local space). */
+  /**
+   * After a fixed step: records the body's true pose and writes it to the object
+   * (so `fixedUpdate` and collision callbacks see it). `beforeUpdate` then replaces
+   * it with the interpolated pose for the frame.
+   */
   private writeBack(s: PhysState) {
     const rb = s.rb!;
-    if (rb.isSleeping()) return;
+    s.prevPos.copy(s.currPos);
+    s.prevQuat.copy(s.currQuat);
+    if (rb.isSleeping()) {
+      // Nothing moved (prev = curr): settle on the true pose once, then leave the object alone.
+      if (s.moving) {
+        s.moving = false;
+        this.place(s, s.currPos, s.currQuat);
+      }
+      return;
+    }
     const t = rb.translation();
     const r = rb.rotation();
+    s.currPos.set(t.x, t.y, t.z);
+    s.currQuat.set(r.x, r.y, r.z, r.w);
+    if (s.body?.interpolate === false) {
+      s.prevPos.copy(s.currPos);
+      s.prevQuat.copy(s.currQuat);
+    }
+    s.moving = !s.prevPos.equals(s.currPos) || !s.prevQuat.equals(s.currQuat);
+    this.place(s, s.currPos, s.currQuat);
+  }
+
+  /** Writes a world pose to the object (converted to local space) and remembers it. */
+  private place(s: PhysState, p: Vector3, q: Quaternion) {
     const node = s.obj.object3d;
-    _p.set(t.x, t.y, t.z);
-    _q.set(r.x, r.y, r.z, r.w);
+    _wp.copy(p);
+    _wq.copy(q);
     const parent = node.parent;
     if (parent) {
       parent.updateWorldMatrix(true, false);
-      parent.worldToLocal(_p);
+      parent.worldToLocal(_wp);
       parent.getWorldQuaternion(_pq).invert();
-      _q.premultiply(_pq);
+      _wq.premultiply(_pq);
     }
-    node.position.copy(_p);
-    node.quaternion.copy(_q);
+    node.position.copy(_wp);
+    node.quaternion.copy(_wq);
     this.worldTransform(s.obj);
     s.lastPos.copy(_p);
     s.lastQuat.copy(_q);
@@ -286,9 +370,14 @@ export class PhysicsSystem {
 
   // --- characters ---------------------------------------------------------------
 
-  /** Queues a displacement for the character's next step. */
+  /**
+   * Queues a horizontal displacement for the character's next step. The vertical
+   * part is dropped: height comes from gravity and `jump()`, so a `moveTo()` towards
+   * a target at another height does not push the character into the ground.
+   */
   moveCharacter(s: PhysState, delta: Vector3) {
-    s.desired.add(delta);
+    s.desired.x += delta.x;
+    s.desired.z += delta.z;
   }
 
   private stepCharacter(s: PhysState, dt: number) {
@@ -378,8 +467,20 @@ export class PhysicsSystem {
     return s.liveAng;
   }
 
-  /** `move()` on a body: dynamic bodies get the horizontal velocity, others are translated. */
+  /**
+   * `move()` on a body: dynamic bodies get the horizontal velocity, kinematic ones are
+   * translated. Static bodies don't move (their collider would stay behind): warns once.
+   */
   moveBody(s: PhysState, delta: Vector3, velocity: Vector3) {
+    if (s.body?.isStatic) {
+      if (!this.warnedStatic) {
+        this.warnedStatic = true;
+        console.warn(
+          "[threeplay] move() on a body({ isStatic: true }) does nothing: its collider can't follow. Use body({ kinematic: true }) for moving platforms.",
+        );
+      }
+      return;
+    }
     if (s.kind === "dynamic" || (!s.rb && s.body && !s.body.isStatic && !s.body.kinematic)) {
       const v = this.velocityOf(s);
       v.x = velocity.x;
@@ -418,6 +519,7 @@ export class PhysicsSystem {
     this.worldTransform(s.obj);
     rb.setTranslation(_p, true);
     s.lastPos.copy(_p);
+    this.setPose(s, _p, _q);
     if (s.kind === "dynamic") {
       rb.setLinvel({ x: 0, y: 0, z: 0 }, true);
       rb.setAngvel({ x: 0, y: 0, z: 0 }, true);

@@ -6,12 +6,15 @@ import {
   type Scene,
   Vector3,
 } from "three";
+import type { Vec3Like } from "../transform/types";
 
 /** Half-size of the sun's shadow box, in world units. */
 export const SHADOW_EXTENT = 20;
 const SHADOW_MAP_SIZE = 2048;
-/** Where the sun sits relative to the point it lights. */
+/** Where the sun sits relative to the point it lights, unless `setDirection()` changes it. */
 const SUN_OFFSET = new Vector3(20, 30, 12);
+/** Distance from the lit point to the sun (kept when the direction changes, it sizes the shadow range). */
+const SUN_DISTANCE = SUN_OFFSET.length();
 /** How far ahead of a camera that looks at the horizon the shadow box is centered. */
 const LOOK_REACH = SHADOW_EXTENT;
 
@@ -60,6 +63,8 @@ export interface DefaultLights {
   ambient: HemisphereLight;
   /** Moves the shadow box to the action around `camera`. Call once per frame. */
   follow(camera: Camera): void;
+  /** Re-aims the sun: `dir` is the direction the light travels (it need not be normalized). */
+  setDirection(dir: Vec3Like): void;
   dispose(): void;
 }
 
@@ -84,6 +89,7 @@ export function createDefaultLights(scene: Scene, shadows: boolean): DefaultLigh
   sun.position.copy(SUN_OFFSET);
   scene.add(ambient, sun, sun.target);
 
+  const offset = SUN_OFFSET.clone();
   const lightDir = SUN_OFFSET.clone().normalize().negate();
   const texel = (SHADOW_EXTENT * 2) / SHADOW_MAP_SIZE;
   const focus = new Vector3();
@@ -99,7 +105,18 @@ export function createDefaultLights(scene: Scene, shadows: boolean): DefaultLigh
       sunFocus(camPos, camDir, focus);
       snapToTexel(focus, lightDir, texel, focus);
       sun.target.position.copy(focus);
-      sun.position.copy(focus).add(SUN_OFFSET);
+      sun.position.copy(focus).add(offset);
+    },
+    setDirection(dir) {
+      const next = new Vector3(dir.x, dir.y, dir.z);
+      if (next.lengthSq() < 1e-12 || !Number.isFinite(next.lengthSq())) {
+        throw new Error(
+          "setSunDirection() needs a non-zero direction, e.g. { x: -1, y: -2, z: -1 }.",
+        );
+      }
+      lightDir.copy(next).normalize();
+      offset.copy(lightDir).multiplyScalar(-SUN_DISTANCE);
+      sun.position.copy(sun.target.position).add(offset);
     },
     dispose() {
       sun.shadow.dispose();

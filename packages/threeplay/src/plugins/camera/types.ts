@@ -53,7 +53,7 @@ export interface ThirdPersonOpts {
   height?: number;
   /** Degrees per pixel of mouse movement (default 0.15). */
   sensitivity?: number;
-  /** Pull the camera in when a wall is between it and the target (default `true`, needs physics). */
+  /** Pull the camera in when a wall is between it and the target (default `true`, needs physics). The target and the children it has when the ray is first cast are ignored by it. */
   avoidWalls?: boolean;
   /** Lock the pointer on click (default `false`: dragging orbits instead). */
   lockOnClick?: boolean;

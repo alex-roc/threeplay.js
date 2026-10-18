@@ -6,7 +6,6 @@ threeplay({
   width: 960,
   height: 540,
   background: "#f1faee",
-  renderer: new URLSearchParams(location.search).get("renderer") ?? "auto",
 });
 
 const PALETTE = ["#e63946", "#457b9d", "#f4a261", "#2a9d8f", "#8338ec"];

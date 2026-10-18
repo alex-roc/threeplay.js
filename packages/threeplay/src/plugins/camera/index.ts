@@ -204,6 +204,9 @@ export const cameraPlugin = definePlugin<CameraAPI>({
         const unlock = lockOnClick ? lockOnCanvasClick() : () => {};
         const wanted = opts.distance ?? 6;
         let shown = wanted; // distance after pulling in for walls
+        // Objects the wall ray ignores: the target and its subtree, collected on first use
+        // (children added to the target later are not excluded).
+        let exclude: GameObj[] | null = null;
         const fields = {
           mode: "thirdPerson" as const,
           yaw: target.has("rotate") ? objectYaw(target) : cameraYaw(),
@@ -224,9 +227,8 @@ export const cameraPlugin = definePlugin<CameraAPI>({
             const dir = orbitOffset(c.yaw, c.pitch, 1);
             let allowed = c.distance;
             if (avoidWalls && k.plugins.physics && typeof k.raycast === "function") {
-              const hit = k.raycast(look, dir, c.distance, {
-                exclude: [target, ...target.get("*")],
-              });
+              exclude ??= [target, ...target.get("*")];
+              const hit = k.raycast(look, dir, c.distance, { exclude });
               if (hit) allowed = Math.max(Math.min(hit.distance - WALL_MARGIN, c.distance), 0.5);
             }
             // Pull in at once, ease back out.

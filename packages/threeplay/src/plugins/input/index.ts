@@ -80,6 +80,31 @@ export const inputPlugin = definePlugin<InputAPI>({
     let touchSeen = false;
 
     const queue: Array<() => void> = [];
+    /** Most events kept while the loop is not running (loading, hidden tab); the oldest are dropped. */
+    const MAX_QUEUE = 512;
+    /** The queued `mousemove` entry, while it is still the last one (later moves merge into it). */
+    let queuedMove: { fn: () => void; pos: Vector2; delta: Vector2 } | null = null;
+
+    function enqueue(fn: () => void) {
+      queue.push(fn);
+      if (queue.length > MAX_QUEUE) queue.splice(0, queue.length - MAX_QUEUE);
+    }
+
+    /** Queues a mouse move; consecutive ones coalesce into a single entry (summing the deltas). */
+    function enqueueMove(pos: Vector2, delta: Vector2) {
+      if (queuedMove && queue[queue.length - 1] === queuedMove.fn) {
+        queuedMove.pos.copy(pos);
+        queuedMove.delta.add(delta);
+        return;
+      }
+      const entry = { pos: pos.clone(), delta: delta.clone(), fn: () => {} };
+      entry.fn = () => {
+        if (queuedMove === entry) queuedMove = null;
+        mouseMove(entry.pos, entry.delta);
+      };
+      queuedMove = entry;
+      enqueue(entry.fn);
+    }
     const clickListeners: ListenerCount = { n: 0 };
     const hoverListeners: ListenerCount = { n: 0 };
     let hoverDirty = false;
@@ -98,9 +123,9 @@ export const inputPlugin = definePlugin<InputAPI>({
         const binding = bindings.get(name);
         const isDown = codeDown.has(name) || (!!binding && isBindingDown(binding, sources));
         if (isDown) {
-          if (buttons.press(name)) k.trigger("buttonPress", name);
+          if (buttons.press(name)) k.trigger("threeplay:buttonPress", name);
         } else if (buttons.release(name)) {
-          k.trigger("buttonRelease", name);
+          k.trigger("threeplay:buttonRelease", name);
         }
       }
     }
@@ -108,18 +133,18 @@ export const inputPlugin = definePlugin<InputAPI>({
     // --- queued event processing -----------------------------------------
     function keyDown(key: Key, repeat: boolean) {
       if (repeat && keys.down.has(key)) {
-        k.trigger("keyPressRepeat", key);
+        k.trigger("threeplay:keyPressRepeat", key);
         return;
       }
       if (!keys.press(key)) return;
-      k.trigger("keyPress", key);
-      k.trigger("keyPressRepeat", key);
+      k.trigger("threeplay:keyPress", key);
+      k.trigger("threeplay:keyPressRepeat", key);
       refreshButtons();
     }
 
     function keyUp(key: Key) {
       if (!keys.release(key)) return;
-      k.trigger("keyRelease", key);
+      k.trigger("threeplay:keyRelease", key);
       refreshButtons();
     }
 
@@ -127,30 +152,31 @@ export const inputPlugin = definePlugin<InputAPI>({
       mousePosition.copy(pos);
       mouseDelta.add(delta);
       hoverDirty = true;
-      k.trigger("mouseMove", pos.clone(), delta.clone());
+      k.trigger("threeplay:mouseMove", pos.clone(), delta.clone());
     }
 
     function mouseDown(btn: MouseButton, pos: Vector2) {
       mousePosition.copy(pos);
       if (!mouse.press(btn)) return;
-      k.trigger("mousePress", btn, pos.clone());
+      k.trigger("threeplay:mousePress", btn, pos.clone());
       refreshButtons();
       if (btn === "left") {
-        k.trigger("click");
-        if (clickListeners.n > 0) k.trigger("clickObject", pick(pointerForPicking()));
+        k.trigger("threeplay:click");
+        if (clickListeners.n > 0) k.trigger("threeplay:clickObject", pick(pointerForPicking()));
       }
     }
 
     function mouseUp(btn: MouseButton, pos: Vector2) {
       mousePosition.copy(pos);
       if (!mouse.release(btn)) return;
-      k.trigger("mouseRelease", btn, pos.clone());
+      k.trigger("threeplay:mouseRelease", btn, pos.clone());
       refreshButtons();
     }
 
     function releaseEverything() {
-      for (const key of keys.releaseAll()) k.trigger("keyRelease", key);
-      for (const btn of mouse.releaseAll()) k.trigger("mouseRelease", btn, mousePosition.clone());
+      for (const key of keys.releaseAll()) k.trigger("threeplay:keyRelease", key);
+      for (const btn of mouse.releaseAll())
+        k.trigger("threeplay:mouseRelease", btn, mousePosition.clone());
       codeDown.clear();
       refreshButtons();
     }
@@ -186,8 +212,8 @@ export const inputPlugin = definePlugin<InputAPI>({
       for (let o = pick(pointerForPicking()); o && o !== k.root; o = o.parent) next.add(o);
       const previous = hoverChain;
       hoverChain = next;
-      for (const o of next) if (!previous.has(o)) k.trigger("hoverStart", o);
-      for (const o of previous) if (!next.has(o)) k.trigger("hoverEnd", o);
+      for (const o of next) if (!previous.has(o)) k.trigger("threeplay:hoverStart", o);
+      for (const o of previous) if (!next.has(o)) k.trigger("threeplay:hoverEnd", o);
     }
 
     // --- gamepad polling ----------------------------------------------------
@@ -199,7 +225,7 @@ export const inputPlugin = definePlugin<InputAPI>({
       let changed = false;
       for (const name of snap.down) {
         if (pads.press(name)) {
-          k.trigger("gamepadButtonPress", name);
+          k.trigger("threeplay:gamepadButtonPress", name);
           changed = true;
         }
       }
@@ -217,8 +243,8 @@ export const inputPlugin = definePlugin<InputAPI>({
       updateHover();
     });
     k.hooks.on("beforeUpdate", () => {
-      for (const key of keys.down) k.trigger("keyDown", key);
-      for (const btn of buttons.down) k.trigger("buttonDown", btn);
+      for (const key of keys.down) k.trigger("threeplay:keyDown", key);
+      for (const btn of buttons.down) k.trigger("threeplay:buttonDown", btn);
     });
     k.hooks.on("frameEnd", () => {
       keys.endFrame();
@@ -251,46 +277,60 @@ export const inputPlugin = definePlugin<InputAPI>({
       const focus = () => canvas.focus({ preventScroll: true });
       k.hooks.on("loaded", focus);
 
-      /** Logical position of a client point (the canvas box is exactly the drawn area). */
+      /**
+       * Logical position of a client point. The canvas box is exactly the drawn area, so each
+       * axis scales by box size / logical size (X and Y differ with `letterbox: false`);
+       * `viewScale()` is the fallback while the box has no size.
+       */
       const logical = (clientX: number, clientY: number) => {
         const r = canvas.getBoundingClientRect();
-        const s = (typeof k.viewScale === "function" ? k.viewScale() : 1) || 1;
-        return new Vector2((clientX - r.left) / s, (clientY - r.top) / s);
+        const fallback = (typeof k.viewScale === "function" ? k.viewScale() : 1) || 1;
+        const sx = r.width > 0 && k.width?.() > 0 ? r.width / k.width() : fallback;
+        const sy = r.height > 0 && k.height?.() > 0 ? r.height / k.height() : fallback;
+        return new Vector2((clientX - r.left) / sx, (clientY - r.top) / sy);
       };
 
       // keyboard (on the canvas, so synthetic events dispatched to it work too)
       listen(canvas, "keydown", (e: KeyboardEvent) => {
         const key = normalizeKey(e.key, e.code);
         if (shouldPreventDefault(key, e)) e.preventDefault();
-        queue.push(() => keyDown(key, e.repeat));
+        enqueue(() => keyDown(key, e.repeat));
         if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
           const ch = e.key;
-          queue.push(() => k.trigger("charInput", ch));
+          enqueue(() => k.trigger("threeplay:charInput", ch));
         }
       });
       listen(canvas, "keyup", (e: KeyboardEvent) => {
         const key = normalizeKey(e.key, e.code);
         if (shouldPreventDefault(key, e)) e.preventDefault();
-        queue.push(() => keyUp(key));
+        enqueue(() => keyUp(key));
       });
-      listen(win, "blur", () => queue.push(releaseEverything));
+      // Held keys must not stick when focus leaves the game: the window loses focus, another
+      // element of the page takes it from the canvas, or the tab gets hidden.
+      const release = () => enqueue(releaseEverything);
+      listen(win, "blur", release);
+      listen(canvas, "blur", release);
+      listen(canvas, "focusout", release);
+      listen(doc, "visibilitychange", () => {
+        if (doc.visibilityState === "hidden") release();
+      });
 
       // mouse
       listen(canvas, "pointerdown", focus);
       listen(canvas, "mousedown", (e: MouseEvent) => {
         const btn = mouseButtonName(e.button);
         const pos = logical(e.clientX, e.clientY);
-        queue.push(() => mouseDown(btn, pos));
+        enqueue(() => mouseDown(btn, pos));
       });
       listen(win, "mouseup", (e: MouseEvent) => {
         const btn = mouseButtonName(e.button);
         const pos = logical(e.clientX, e.clientY);
-        queue.push(() => mouseUp(btn, pos));
+        enqueue(() => mouseUp(btn, pos));
       });
       listen(win, "mousemove", (e: MouseEvent) => {
         const pos = logical(e.clientX, e.clientY);
         const delta = new Vector2(e.movementX || 0, e.movementY || 0);
-        queue.push(() => mouseMove(pos, delta));
+        enqueueMove(pos, delta);
       });
       listen(
         canvas,
@@ -298,7 +338,7 @@ export const inputPlugin = definePlugin<InputAPI>({
         (e: WheelEvent) => {
           e.preventDefault();
           const delta = new Vector2(e.deltaX, e.deltaY);
-          queue.push(() => k.trigger("scroll", delta));
+          enqueue(() => k.trigger("threeplay:scroll", delta));
         },
         { passive: false },
       );
@@ -320,8 +360,8 @@ export const inputPlugin = definePlugin<InputAPI>({
           if (event === "touchStart" && isPrimary) primary = touch.identifier;
           const delta = new Vector2(touch.clientX, touch.clientY).sub(lastClient);
           if (isPrimary) lastClient.set(touch.clientX, touch.clientY);
-          queue.push(() => {
-            k.trigger(event, pos.clone(), touch);
+          enqueue(() => {
+            k.trigger(`threeplay:${event}`, pos.clone(), touch);
             if (!isPrimary) return;
             if (event === "touchStart") {
               mouseMove(pos, new Vector2());
@@ -342,7 +382,7 @@ export const inputPlugin = definePlugin<InputAPI>({
 
       // gamepad
       listen(win, "gamepadconnected", (e: GamepadEvent) => {
-        queue.push(() => k.trigger("gamepadConnect", e.gamepad));
+        enqueue(() => k.trigger("threeplay:gamepadConnect", e.gamepad));
       });
     }
     k.onQuit(() => {
@@ -395,27 +435,28 @@ export const inputPlugin = definePlugin<InputAPI>({
       isKeyDown: (key) => toList(key).some((x) => keys.down.has(normalizeKey(x))),
       isKeyPressed: (key) => hasAny(keys.pressed, normKeys(key)),
       isKeyReleased: (key) => hasAny(keys.released, normKeys(key)),
-      onKeyDown: (a: any, b?: any) => onNamed("keyDown", a, b, normalizeKey),
-      onKeyPress: (a: any, b?: any) => onNamed("keyPress", a, b, normalizeKey),
-      onKeyPressRepeat: (a: any, b?: any) => onNamed("keyPressRepeat", a, b, normalizeKey),
-      onKeyRelease: (a: any, b?: any) => onNamed("keyRelease", a, b, normalizeKey),
-      onCharInput: (fn) => k.on("charInput", fn),
+      onKeyDown: (a: any, b?: any) => onNamed("threeplay:keyDown", a, b, normalizeKey),
+      onKeyPress: (a: any, b?: any) => onNamed("threeplay:keyPress", a, b, normalizeKey),
+      onKeyPressRepeat: (a: any, b?: any) =>
+        onNamed("threeplay:keyPressRepeat", a, b, normalizeKey),
+      onKeyRelease: (a: any, b?: any) => onNamed("threeplay:keyRelease", a, b, normalizeKey),
+      onCharInput: (fn) => k.on("threeplay:charInput", fn),
 
       // virtual buttons
       isButtonDown: buttonDown,
       isButtonPressed: (btn) => hasAny(buttons.pressed, btn),
       isButtonReleased: (btn) => hasAny(buttons.released, btn),
-      onButtonDown: (a: any, b?: any) => onNamed("buttonDown", a, b),
-      onButtonPress: (a: any, b?: any) => onNamed("buttonPress", a, b),
-      onButtonRelease: (a: any, b?: any) => onNamed("buttonRelease", a, b),
+      onButtonDown: (a: any, b?: any) => onNamed("threeplay:buttonDown", a, b),
+      onButtonPress: (a: any, b?: any) => onNamed("threeplay:buttonPress", a, b),
+      onButtonRelease: (a: any, b?: any) => onNamed("threeplay:buttonRelease", a, b),
       pressButton(btn) {
-        queue.push(() => {
+        enqueue(() => {
           codeDown.add(btn);
           refreshButtons();
         });
       },
       releaseButton(btn) {
-        queue.push(() => {
+        enqueue(() => {
           codeDown.delete(btn);
           refreshButtons();
         });
@@ -432,17 +473,17 @@ export const inputPlugin = definePlugin<InputAPI>({
       isMouseDown: (btn = "left") => mouse.down.has(btn),
       isMousePressed: (btn = "left") => mouse.pressed.has(btn),
       isMouseReleased: (btn = "left") => mouse.released.has(btn),
-      onMousePress: (a: any, b?: any) => onMouse("mousePress", a, b),
-      onMouseRelease: (a: any, b?: any) => onMouse("mouseRelease", a, b),
-      onMouseMove: (fn) => k.on("mouseMove", fn),
-      onScroll: (fn) => k.on("scroll", fn),
+      onMousePress: (a: any, b?: any) => onMouse("threeplay:mousePress", a, b),
+      onMouseRelease: (a: any, b?: any) => onMouse("threeplay:mouseRelease", a, b),
+      onMouseMove: (fn) => k.on("threeplay:mouseMove", fn),
+      onScroll: (fn) => k.on("threeplay:scroll", fn),
       lockPointer: () => setPointerLock(true),
       unlockPointer: () => setPointerLock(false),
       isPointerLocked: () => locked,
       onClick: (a: any, b?: any) => {
-        if (typeof a === "function") return k.on("click", () => a());
+        if (typeof a === "function") return k.on("threeplay:click", () => a());
         return counted(
-          k.on("clickObject", (hit: GameObj | null) => {
+          k.on("threeplay:clickObject", (hit: GameObj | null) => {
             const obj = withTag(hit, a);
             if (obj) b(obj);
           }),
@@ -451,23 +492,23 @@ export const inputPlugin = definePlugin<InputAPI>({
       },
       onHover: (tag, fn) =>
         counted(
-          k.on("hoverStart", (o: GameObj) => {
+          k.on("threeplay:hoverStart", (o: GameObj) => {
             if (o.is(tag)) fn(o);
           }),
           hoverListeners,
         ),
       onHoverEnd: (tag, fn) =>
         counted(
-          k.on("hoverEnd", (o: GameObj) => {
+          k.on("threeplay:hoverEnd", (o: GameObj) => {
             if (o.is(tag)) fn(o);
           }),
           hoverListeners,
         ),
 
       // touch
-      onTouchStart: (fn) => k.on("touchStart", fn),
-      onTouchMove: (fn) => k.on("touchMove", fn),
-      onTouchEnd: (fn) => k.on("touchEnd", fn),
+      onTouchStart: (fn) => k.on("threeplay:touchStart", fn),
+      onTouchMove: (fn) => k.on("threeplay:touchMove", fn),
+      onTouchEnd: (fn) => k.on("threeplay:touchEnd", fn),
       isTouchscreen: () =>
         touchSeen ||
         (typeof window !== "undefined" && "ontouchstart" in window) ||
@@ -476,8 +517,8 @@ export const inputPlugin = definePlugin<InputAPI>({
       // gamepad
       getGamepadStick: (stick) => sticks[stick].clone(),
       isGamepadButtonDown: (btn) => pads.down.has(btn),
-      onGamepadButtonPress: (a: any, b?: any) => onNamed("gamepadButtonPress", a, b),
-      onGamepadConnect: (fn) => k.on("gamepadConnect", fn),
+      onGamepadButtonPress: (a: any, b?: any) => onNamed("threeplay:gamepadButtonPress", a, b),
+      onGamepadConnect: (fn) => k.on("threeplay:gamepadConnect", fn),
 
       inputDir(left = "left", right = "right", forward = "up", back = "down", opts = {}) {
         const stick = sticks.left;

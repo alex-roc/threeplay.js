@@ -146,13 +146,19 @@ export class SoundPlay implements AudioPlay {
     this.finish();
   }
 
-  /** Moves a positional sound to where its target is now. Called every frame. */
+  /**
+   * Moves a positional sound to where its target is now. Called every frame.
+   * A destroyed object leaves a one-shot sound where it was, but ends a looping one
+   * (a loop would play forever from a place that no longer exists).
+   */
   updatePosition() {
     if (!this.panner || !this.at) return;
-    // A destroyed object leaves the sound where it was.
     if (!isGameObj(this.at) || this.at.exists()) {
       const p = targetPos(this.at);
       this.lastPos = { x: p.x, y: p.y, z: p.z };
+    } else if (this.loop) {
+      this.stop();
+      return;
     }
     setXYZ(this.panner, "position", this.lastPos.x, this.lastPos.y, this.lastPos.z);
   }

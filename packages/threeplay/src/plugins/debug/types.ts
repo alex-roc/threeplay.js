@@ -2,7 +2,11 @@ import type { GameObj } from "../../core/types";
 
 /** Options added to `threeplay()` by the debug plugin. */
 export interface DebugOpts {
-  /** Key that toggles the inspector (default `"f1"`; `false` disables it). */
+  /**
+   * Key that toggles the inspector (default `"f1"`; `false` disables it). Needs the input
+   * plugin (an optional dependency: without it the key does nothing). The browser default of
+   * the key is prevented while the canvas has focus (F1 would open help on Windows).
+   */
   debugKey?: string | false;
   /** Start with the inspector on. */
   debug?: boolean;

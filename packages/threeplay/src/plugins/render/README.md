@@ -22,11 +22,12 @@ The three.js renderer, the canvas layout, the HUD overlay and the default lighti
 | `renderer` | the backend (`renderer.three` is the raw three.js renderer) |
 | `canvas` | the game canvas (`null` when headless) |
 | `width()`, `height()`, `center()` | logical size |
-| `viewScale()` | CSS px per logical unit |
+| `viewScale()` | CSS px per logical unit (horizontal: with `letterbox: false` Y differs, use `canvas.getBoundingClientRect().height / height()`) |
+| `setSunDirection(dir)` | re-aims the default sun (direction the light travels); shadows keep following the camera |
 | `overlay()` | DOM layer in logical units (`null` when headless) |
 | `toScreen(world)`, `screenRay(screen)` | projection in logical coordinates |
 | `setBackground(c)`, `getBackground()`, `setFog(opts)` | scene look |
-| `sun`, `ambient` | the default lights (`null` with `lighting: "none"`) |
+| `sun`, `ambient` | the default lights (`null` with `lighting: "none"`). The sun's `position`/`target` are rewritten every frame to follow the camera: use `setSunDirection()` to change where it shines from |
 | `screenshot()` | PNG data URL |
 | `onResize(fn)` | logical size or scale changed (scene-scoped like other listeners) |
 | `pointLight()`, `spotLight()`, `dirLight()` | light components |

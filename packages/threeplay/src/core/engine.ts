@@ -56,11 +56,11 @@ export function createEngine(opts: ThreeplayOpts = {}, plugins: PluginLike[] = [
   const ctx: GameObjContext = {
     onEnter: (obj) => {
       hooks.emit("objectAdd", obj);
-      events.emit("__add", obj);
+      events.emit("threeplay:add", obj);
     },
     onDestroy: (obj) => {
       hooks.emit("objectDestroy", obj);
-      events.emit("__destroy", obj);
+      events.emit("threeplay:destroy", obj);
     },
     route: (obj, event, args) => {
       if (tagEvents.has(event)) tagEvents.emit(event, obj, ...args);
@@ -246,11 +246,11 @@ export function createEngine(opts: ThreeplayOpts = {}, plugins: PluginLike[] = [
       return core.on("fixedUpdate", tagOrFn, fn!);
     },
     onAdd(tagOrFn: Tag | ((obj: GameObj) => void), fn?: (obj: GameObj) => void) {
-      if (typeof tagOrFn === "function") return core.on("__add", tagOrFn);
+      if (typeof tagOrFn === "function") return core.on("threeplay:add", tagOrFn);
       return core.on("add", tagOrFn, fn!);
     },
     onDestroy(tagOrFn: Tag | ((obj: GameObj) => void), fn?: (obj: GameObj) => void) {
-      if (typeof tagOrFn === "function") return core.on("__destroy", tagOrFn);
+      if (typeof tagOrFn === "function") return core.on("threeplay:destroy", tagOrFn);
       return core.on("destroy", tagOrFn, fn!);
     },
     onLoad(fn: () => void): EventController {

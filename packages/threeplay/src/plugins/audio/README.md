@@ -3,8 +3,12 @@
 WebAudio sounds, positional audio and synthesized beeps. No dependencies.
 
 One `AudioContext` is created lazily on first use (`null` in Node or without WebAudio, in which
-case everything is inert). It is resumed on the first `pointerdown`/`keydown` on `window`, to
-satisfy browser autoplay policies. All sounds go through a master `GainNode`.
+case everything is inert). It is resumed on the first `pointerup`/`touchend`/`click`/`keydown` on
+`window` (touch screens do not count `pointerdown` as an activation) and the listeners are removed
+only once the context is `running` (autoplay policies). All sounds go through a master `GainNode`.
+`loadSound` decodes with an `OfflineAudioContext` (falling back to the real context only when it
+is missing), so loading does not create a suspended `AudioContext` before any gesture. After
+`quit()` no context is created again.
 
 ## API
 
@@ -15,8 +19,9 @@ satisfy browser autoplay policies. All sounds go through a master `GainNode`.
   Options: `volume`, `loop`, `speed`, `detune` (cents), `at`, `panning` (`"HRTF"` default or
   `"equalpower"`), `refDistance`, `rolloff`. Throws for an unknown name, listing the loaded ones.
 - `at` (a vector or a game object) makes the sound positional: a `PannerNode` with inverse
-  distance falloff whose position is refreshed every frame. A vector is read every frame; a
-  destroyed object leaves the sound where it was. The listener follows `k.camera3d`
+  distance falloff whose position is refreshed every frame. A vector is read every frame; when an
+  object is destroyed a one-shot sound finishes where it was, but a **looping** sound attached to
+  it stops with it. The listener follows `k.camera3d`
   (position and orientation) in `afterUpdate`.
 - `beep({ freq = 440, duration = 0.1, type = "square", volume = 0.3, slideTo })` — an oscillator
   with a short envelope. No assets needed: great for prototypes and UI.
@@ -24,7 +29,7 @@ satisfy browser autoplay policies. All sounds go through a master `GainNode`.
 - `audioCtx` — the shared context (escape hatch).
 
 Sounds are **not** stopped when the scene changes: they keep playing until they end or you
-`stop()` them (e.g. in `onSceneLeave`).
+`stop()` them (e.g. in `onSceneLeave`), except looping sounds attached to a destroyed object.
 
 ## Example
 

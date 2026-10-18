@@ -6,7 +6,6 @@ threeplay({
   width: 960,
   height: 540,
   background: "#1b1b2f",
-  renderer: new URLSearchParams(location.search).get("renderer") ?? "auto",
 });
 
 const MAP = [

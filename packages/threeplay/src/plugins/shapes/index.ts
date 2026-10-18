@@ -6,9 +6,11 @@ import { self } from "../../core/util";
 import { DEFAULT_SEGMENTS, makeGeometry } from "./geometry";
 import {
   applyOpacity,
+  bumpMaterials,
   collectMaterials,
   createMaterial,
   defaultMaterial,
+  materialsVersion,
   repeatedTexture,
   repeatOf,
   shareColor,
@@ -18,6 +20,7 @@ import type {
   MaterialOpts,
   OpacityComp,
   PrimitiveComp,
+  ShapeComp,
   ShapeDesc,
   ShapeOpts,
   ShapesAPI,
@@ -36,6 +39,12 @@ export const shapesPlugin = definePlugin<ShapesAPI>({
   install(k: Engine) {
     // Materials this plugin created (and so may dispose); user-provided ones are left alone.
     const owned = new WeakSet<Material>();
+
+    /**
+     * `color()` and `opacity()` write to the materials: a shape that can share them with other
+     * objects (a `model()`) is asked to make its own copy first.
+     */
+    const isolate = (obj: GameObj) => (obj as unknown as Partial<ShapeComp>).isolateMaterials?.();
 
     /** Gives the object's materials its `color` (same instance), if it has one. */
     function syncColor(obj: GameObj) {
@@ -111,7 +120,9 @@ export const shapesPlugin = definePlugin<ShapesAPI>({
           value.copy(toColor(v));
         },
         add() {
-          syncColor(self(this));
+          const obj = self(this);
+          isolate(obj);
+          syncColor(obj);
         },
         inspect: () => `#${value.getHexString()}`,
       } as ColorComp;
@@ -119,11 +130,20 @@ export const shapesPlugin = definePlugin<ShapesAPI>({
 
     function opacity(initial = 1): OpacityComp {
       let fading: TimerController | null = null;
+      // What was last written, so frames where nothing changed cost nothing.
+      let applied = Number.NaN;
+      let appliedVersion = -1;
+      let appliedSingle: Material | Material[] | undefined;
       function apply(obj: GameObj) {
         const root = obj.mesh as Mesh | undefined;
         if (!root) return; // HUD objects just keep the number
         const o = Math.min(1, Math.max(0, obj.opacity as number));
         const single = root.material;
+        const version = materialsVersion(root);
+        if (o === applied && version === appliedVersion && single === appliedSingle) return;
+        applied = o;
+        appliedVersion = version;
+        appliedSingle = single;
         if (single && !Array.isArray(single)) applyOpacity(single, o);
         else for (const m of collectMaterials(root)) applyOpacity(m, o);
       }
@@ -143,7 +163,9 @@ export const shapesPlugin = definePlugin<ShapesAPI>({
           }
         },
         add() {
-          apply(self(this));
+          const obj = self(this);
+          isolate(obj);
+          apply(obj);
         },
         update() {
           apply(self(this));
@@ -163,10 +185,12 @@ export const shapesPlugin = definePlugin<ShapesAPI>({
       if (!instance) owned.add(mat);
       const opts: MaterialOpts = instance ? {} : spec;
       const repeat = repeatOf(opts.repeat);
+      // The clone made for `repeat` belongs to this material: disposed with it.
+      let repeated: Texture | null = null;
       const setMap = (texture: Texture) => {
-        (mat as Material & { map: Texture | null }).map = repeat
-          ? repeatedTexture(texture, repeat)
-          : texture;
+        repeated?.dispose();
+        repeated = repeat ? repeatedTexture(texture, repeat) : null;
+        (mat as Material & { map: Texture | null }).map = repeated ?? texture;
         mat.needsUpdate = true;
       };
       // A texture given by name may not be loaded yet (or the assets plugin may be absent).
@@ -193,10 +217,16 @@ export const shapesPlugin = definePlugin<ShapesAPI>({
             m.material = mat;
             for (const o of Array.isArray(old) ? old : [old]) if (owned.has(o)) o.dispose();
           });
+          if (obj.mesh) bumpMaterials(obj.mesh as Mesh);
           syncColor(obj);
         },
         update() {
           resolveMap();
+        },
+        destroy() {
+          repeated?.dispose();
+          repeated = null;
+          if (owned.has(mat)) mat.dispose();
         },
       };
     }

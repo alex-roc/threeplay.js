@@ -76,12 +76,25 @@ export interface BodyOpts {
   lockRotation?: boolean;
   /** Continuous collision detection for fast objects (default `false`). */
   ccd?: boolean;
+  /**
+   * Dynamic bodies only: render the pose interpolated between the last two fixed
+   * steps (default `true`). Without it motion looks jittery whenever the display
+   * rate is not a multiple of the 50 Hz physics rate. Set `false` to make `pos`/`rot`
+   * always hold the latest simulated pose, at the cost of that jitter.
+   */
+  interpolate?: boolean;
 }
 
 /**
  * Fields added by `body()`. Requires `area()`. It is a {@link MoveHandler}:
  * `move()` sets the horizontal velocity of dynamic bodies and translates
- * kinematic/static ones.
+ * kinematic ones (static bodies ignore it, with a warning).
+ *
+ * Dynamic bodies are **interpolated**: from `update` on, `pos`/`rot` hold the
+ * visual pose of the frame, up to one fixed step (20 ms) behind the simulation.
+ * `fixedUpdate` and collision callbacks see the latest simulated pose, and
+ * `raycast`, `vel` and `isGrounded()` always use the simulation. Assigning `pos`
+ * or `rot` from code teleports the body. Opt out with `body({ interpolate: false })`.
  */
 export interface BodyComp extends Comp, MoveHandler {
   id: "body";
@@ -92,7 +105,7 @@ export interface BodyComp extends Comp, MoveHandler {
   applyImpulse(impulse: Vec3Like): void;
   applyForce(force: Vec3Like): void;
   applyTorqueImpulse(torque: Vec3Like): void;
-  /** Sets the vertical velocity (default force from `body` options, 8). */
+  /** Sets the vertical velocity (default 8). */
   jump(force?: number): void;
   /** `true` if standing on something (ground probe below the collider). */
   isGrounded(): boolean;
@@ -119,12 +132,17 @@ export interface CharacterOpts {
 
 /**
  * Fields added by `character()`: a kinematic character controller.
- * `move()` (from `pos`) slides along walls instead of passing through.
+ * `move()` (from `pos`) slides along walls instead of passing through; only its
+ * horizontal (x/z) part is used, vertical motion comes from gravity and `jump()`.
  * Requires `area()`; do not combine with `body()`.
  */
 export interface CharacterComp extends Comp, MoveHandler {
   id: "character";
-  /** Current velocity (vertical part includes gravity). */
+  /**
+   * Current velocity. Only `vel.y` is meaningful: it includes gravity and can be
+   * assigned (`vel.y = 5` launches the character). Horizontal movement comes only
+   * from `move()`/`moveTo()`, so `vel.x`/`vel.z` are ignored when written.
+   */
   vel: THREE.Vector3;
   jump(force?: number): void;
   isGrounded(): boolean;

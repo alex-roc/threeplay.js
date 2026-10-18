@@ -12,8 +12,11 @@ Primitive shapes and the components that give them a look. Depends on `transform
 - `color()`: `obj.color` is a `THREE.Color` **shared with the material**, so
   `obj.color.set("red")` just works, and so does `obj.color = "red"` (the setter copies). Works in
   any order inside `add([...])`. On objects without a mesh (HUD) it is just the field the HUD reads.
-- `opacity()`: `obj.opacity` is synced to the material every frame (`transparent` while < 1);
+- `opacity()`: `obj.opacity` is synced to the material when it changes (`transparent` while < 1);
   `fadeOut(seconds, destroy?)`.
+- On a `model()` instance, `color()` and `opacity()` first give the instance its own copy of the
+  materials (the shape contract `isolateMaterials?()`), so the template and the other instances
+  are untouched.
 - `material()`: replaces the mesh material (`standard`, `basic`, `toon`, `lambert`, `phong`) or takes
   a `THREE.Material`. `map` as a string is resolved lazily through the assets plugin, if installed.
 
@@ -33,5 +36,6 @@ ball.fadeOut(0.5, true);   // fade, then destroy
 
 ## Notes
 
-- A `repeat` clones the texture, so the shared one is never modified.
+- A `repeat` clones the texture, so the shared one is never modified; the clone is disposed with the
+  material. Materials created from options are disposed on destroy.
 - `transparent` is only raised while opacity < 1; a material that was transparent keeps being so.
