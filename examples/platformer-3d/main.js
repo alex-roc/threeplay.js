@@ -56,7 +56,11 @@ scene("game", () => {
   const total = get("coin").length;
   let score = 0;
   const hud = add([text(`Coins: 0 / ${total}`, { size: 22 }), pos(20, 16), fixed()]);
-  add([text("WASD / arrows to move · space to jump · drag to look", { size: 14 }), pos(20, 510), fixed()]);
+  add([
+    text("WASD / arrows to move · space to jump · drag to look", { size: 14 }),
+    pos(20, 510),
+    fixed(),
+  ]);
 
   onUpdate(() => {
     const dir = inputDir(); // camera-relative, on the XZ plane

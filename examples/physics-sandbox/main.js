@@ -13,7 +13,17 @@ const PALETTE = ["#e63946", "#457b9d", "#f4a261", "#2a9d8f", "#8338ec"];
 
 function spawnShape(at) {
   const shape = choose([box(1, 1, 1), sphere(0.55), cylinder(0.5, 1), capsule(0.4, 1.4)]);
-  add([shape, pos(at), rotate(rand(360), rand(360), 0), color(choose(PALETTE)), area({ restitution: 0.3 }), body(), lifespan(30, { fade: 1 }), opacity(1), "prop"]);
+  add([
+    shape,
+    pos(at),
+    rotate(rand(360), rand(360), 0),
+    color(choose(PALETTE)),
+    area({ restitution: 0.3 }),
+    body(),
+    lifespan(30, { fade: 1 }),
+    opacity(1),
+    "prop",
+  ]);
 }
 
 scene("sandbox", () => {
@@ -23,13 +33,34 @@ scene("sandbox", () => {
   // A tower of crates.
   for (let y = 0; y < 6; y++) {
     for (let x = -1; x <= 1; x++) {
-      add([box(1, 1, 1), pos(x * 1.05, 0.5 + y * 1.02, 0), color(PALETTE[(x + y + 3) % 5]), area(), body({ mass: 1 }), "prop"]);
+      add([
+        box(1, 1, 1),
+        pos(x * 1.05, 0.5 + y * 1.02, 0),
+        color(PALETTE[(x + y + 3) % 5]),
+        area(),
+        body({ mass: 1 }),
+        "prop",
+      ]);
     }
   }
-  const ball = add([sphere(0.7), pos(0, 0.7, 8), color("#1d3557"), area({ restitution: 0.5 }), body({ mass: 6 }), "prop", "ball"]);
+  const ball = add([
+    sphere(0.7),
+    pos(0, 0.7, 8),
+    color("#1d3557"),
+    area({ restitution: 0.5 }),
+    body({ mass: 6 }),
+    "prop",
+    "ball",
+  ]);
 
   orbitCamera({ target: vec3(0, 2, 0), distance: 16 });
-  add([text("Click a shape to flick it · space: spawn · B: bowl the ball · R: reset · drag to orbit", { size: 15 }), pos(20, 16), fixed()]);
+  add([
+    text("Click a shape to flick it · space: spawn · B: bowl the ball · R: reset · drag to orbit", {
+      size: 15,
+    }),
+    pos(20, 16),
+    fixed(),
+  ]);
   const counter = add([text("", { size: 15 }), pos(20, 40), fixed()]);
   onUpdate(() => {
     counter.text = `${get("prop").length} bodies`;

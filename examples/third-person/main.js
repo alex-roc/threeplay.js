@@ -28,22 +28,47 @@ scene("world", () => {
     add([sphere(1.2), pos(p.x, 2.6, p.z), color("#2d6a4f")]);
   }
   for (let i = 0; i < 8; i++) {
-    add([box(1, 1, 1), pos(rand(-6, 6), 0.5, rand(-6, 6)), color("#dda15e"), area(), body({ mass: 2 }), "crate"]);
+    add([
+      box(1, 1, 1),
+      pos(rand(-6, 6), 0.5, rand(-6, 6)),
+      color("#dda15e"),
+      area(),
+      body({ mass: 2 }),
+      "crate",
+    ]);
   }
 
   // The player: a capsule with a "nose" child that shows where it faces.
-  const player = add([capsule(0.45, 1.7), pos(0, 1, 4), rotate(), color("#277da1"), area(), character(), "player"]);
+  const player = add([
+    capsule(0.45, 1.7),
+    pos(0, 1, 4),
+    rotate(),
+    color("#277da1"),
+    area(),
+    character(),
+    "player",
+  ]);
   player.add([box(0.25, 0.25, 0.4), pos(0, 0.45, -0.45), color("#f9c74f")]);
   thirdPerson(player, { distance: 7, height: 1.4 });
 
   // The guard patrols between waypoints and chases the player when close.
-  const guard = add([box(1, 1.8, 1), pos(-8, 0.9, -8), rotate(), color("#d62828"), area(), character(), state("patrol", ["patrol", "chase", "rest"]), "guard"]);
+  const guard = add([
+    box(1, 1.8, 1),
+    pos(-8, 0.9, -8),
+    rotate(),
+    color("#d62828"),
+    area(),
+    character(),
+    state("patrol", ["patrol", "chase", "rest"]),
+    "guard",
+  ]);
   let target = 1;
   guard.onStateUpdate("patrol", () => {
     const wp = WAYPOINTS[target];
     guard.moveTo(vec3(wp.x, guard.pos.y, wp.z), 3);
     guard.lookAt(vec3(wp.x, guard.pos.y, wp.z));
-    if (guard.distanceTo(vec3(wp.x, guard.pos.y, wp.z)) < 0.5) target = (target + 1) % WAYPOINTS.length;
+    if (guard.distanceTo(vec3(wp.x, guard.pos.y, wp.z)) < 0.5)
+      target = (target + 1) % WAYPOINTS.length;
     if (guard.distanceTo(player) < 6) guard.enterState("chase");
   });
   guard.onStateUpdate("chase", () => {
@@ -55,7 +80,11 @@ scene("world", () => {
 
   let caught = 0;
   const hud = add([text("", { size: 18 }), pos(20, 16), fixed()]);
-  add([text("WASD move · space jump · E / click kick crates · drag to look", { size: 14 }), pos(20, 510), fixed()]);
+  add([
+    text("WASD move · space jump · E / click kick crates · drag to look", { size: 14 }),
+    pos(20, 510),
+    fixed(),
+  ]);
   const label = guard.add([text("!", { size: 30 }), pos(0, 1.5, 0)]); // floats over the guard
   onUpdate(() => {
     hud.text = `Caught ${caught} times · guard: ${guard.state}`;
@@ -68,7 +97,12 @@ scene("world", () => {
   onButtonPress("kick", () => {
     for (const crate of get("crate")) {
       if (crate.distanceTo(player) < 2.2) {
-        crate.applyImpulse(player.forward().multiplyScalar(14).add(vec3(0, 6, 0)));
+        crate.applyImpulse(
+          player
+            .forward()
+            .multiplyScalar(14)
+            .add(vec3(0, 6, 0)),
+        );
       }
     }
   });

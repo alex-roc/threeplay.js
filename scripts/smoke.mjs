@@ -7,7 +7,7 @@
 //
 // Uses the system Chrome locally (channel "chrome") and Playwright's Chromium
 // in CI (`pnpm exec playwright install chromium`).
-import { mkdirSync, readdirSync, existsSync } from "node:fs";
+import { existsSync, mkdirSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import { chromium } from "playwright";
 import { createServer } from "vite";
@@ -42,9 +42,13 @@ for (const name of examples) {
   // renderer=webgl: headless Chrome has no WebGPU adapter.
   await page.goto(`${base}${name}/index.html?renderer=webgl`);
   try {
-    await page.waitForFunction(() => globalThis.k?.isLoaded?.() && globalThis.k.time() > 0.5, null, {
-      timeout: 20000,
-    });
+    await page.waitForFunction(
+      () => globalThis.k?.isLoaded?.() && globalThis.k.time() > 0.5,
+      null,
+      {
+        timeout: 20000,
+      },
+    );
   } catch {
     errors.push("timed out waiting for the game to load and run");
   }

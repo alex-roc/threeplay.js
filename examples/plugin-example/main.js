@@ -60,7 +60,13 @@ threeplay({
 scene("main", () => {
   add([plane(20, 20), color("#4a4e69")]);
   for (let i = 0; i < 5; i++) {
-    add([sphere(0.6), pos(-6 + i * 3, 1.5, 0), color("#c9ada7"), bob(0.4, 1.5 + i * 0.3), "balloon"]);
+    add([
+      sphere(0.6),
+      pos(-6 + i * 3, 1.5, 0),
+      color("#c9ada7"),
+      bob(0.4, 1.5 + i * 0.3),
+      "balloon",
+    ]);
   }
   camPos(0, 4, 10);
   camLookAt(vec3(0, 1.5, 0));

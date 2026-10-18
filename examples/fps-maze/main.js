@@ -29,25 +29,52 @@ scene("game", () => {
   addLevel(MAP, {
     tileSize: TILE,
     tiles: {
-      "#": (p) => [box(TILE, 3, TILE), pos(p.x, 1.5, p.z), color("#5c677d"), area(), body({ isStatic: true })],
+      "#": (p) => [
+        box(TILE, 3, TILE),
+        pos(p.x, 1.5, p.z),
+        color("#5c677d"),
+        area(),
+        body({ isStatic: true }),
+      ],
       "@": (p) => {
         start = p.clone();
         return [];
       },
-      e: (p) => [sphere(0.5), pos(p.x, 1, p.z), color("crimson"), area(), character(), health(3), "enemy"],
+      e: (p) => [
+        sphere(0.5),
+        pos(p.x, 1, p.z),
+        color("crimson"),
+        area(),
+        character(),
+        health(3),
+        "enemy",
+      ],
       x: (p) => [cylinder(0.7, 0.1), pos(p.x, 0.05, p.z), color("lime"), area(), "exit"],
     },
   });
   const size = MAP[0].length * TILE;
   add([box(size, 0.2, size), pos(0, -0.1, 0), color("#33415c"), area(), body({ isStatic: true })]);
 
-  const player = add([capsule(0.4, 1.6), pos(start.x, 1, start.z), rotate(), area(), character(), health(5), "player"]);
+  const player = add([
+    capsule(0.4, 1.6),
+    pos(start.x, 1, start.z),
+    rotate(),
+    area(),
+    character(),
+    health(5),
+    "player",
+  ]);
   player.hidden = true;
   firstPerson(player, { height: 0.6 });
 
   const hud = add([text("", { size: 20 }), pos(20, 16), fixed()]);
   add([text("+", { size: 28 }), pos(480, 270), anchor("center"), fixed()]);
-  const help = add([text("Click to look around · WASD to move · click to shoot", { size: 16 }), pos(480, 500), anchor("center"), fixed()]);
+  const help = add([
+    text("Click to look around · WASD to move · click to shoot", { size: 16 }),
+    pos(480, 500),
+    anchor("center"),
+    fixed(),
+  ]);
   const updateHud = () => {
     hud.text = `HP ${player.hp}   Enemies ${get("enemy").length}`;
   };
@@ -94,7 +121,12 @@ scene("game", () => {
 
 scene("end", (won) => {
   unlockPointer();
-  add([text(won ? "You escaped!" : "You died", { size: 44 }), pos(480, 230), anchor("center"), fixed()]);
+  add([
+    text(won ? "You escaped!" : "You died", { size: 44 }),
+    pos(480, 230),
+    anchor("center"),
+    fixed(),
+  ]);
   add([text("Click to play again", { size: 20 }), pos(480, 290), anchor("center"), fixed()]);
   onClick(() => go("game"));
 });

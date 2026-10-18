@@ -3,6 +3,7 @@ import type { Engine, PluginLike, ThreeplayOpts } from "./core/types";
 import { installGlobals } from "./globals";
 
 export { globalKeys, installGlobals } from "./globals";
+
 import { defaultPlugins } from "./plugins";
 
 /** Options of {@link threeplay}. */

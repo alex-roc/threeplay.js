@@ -51,7 +51,13 @@ scene("race", () => {
   addLevel(MAP, {
     tileSize: TILE,
     tiles: {
-      "#": (p) => [box(TILE, 1.5, TILE), pos(p.x, 0.75, p.z), color("#e63946"), area(), body({ isStatic: true })],
+      "#": (p) => [
+        box(TILE, 1.5, TILE),
+        pos(p.x, 0.75, p.z),
+        color("#e63946"),
+        area(),
+        body({ isStatic: true }),
+      ],
       F: (p) => [box(TILE, 0.05, 1), pos(p.x, 0.03, p.z), color("white"), area(), "finish"],
       C: (p) => [box(TILE, 2, 1), pos(p.x, 1, p.z), opacity(0), area(), "checkpoint"],
       S: (p) => {
