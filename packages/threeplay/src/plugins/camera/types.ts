@@ -51,6 +51,12 @@ export interface ThirdPersonOpts {
   distance?: number;
   /** Height of the look-at point over the target origin (default 1). */
   height?: number;
+  /**
+   * Over-the-shoulder offset in meters: the camera and its look-at point move this far
+   * to the camera's right (negative: left), so the target sits off-center and the screen
+   * center stays free for aiming. Default 0 (centered).
+   */
+  shoulder?: number;
   /** Degrees per pixel of mouse movement (default 0.15). */
   sensitivity?: number;
   /** Pull the camera in when a wall is between it and the target (default `true`, needs physics). The target and the children it has when the ray is first cast are ignored by it. */
@@ -71,6 +77,8 @@ export interface ThirdPersonController extends CameraController {
   pitch: number;
   /** Wanted distance (the camera may be closer while a wall is in the way). */
   distance: number;
+  /** Over-the-shoulder offset in meters (negate it to switch shoulders). */
+  shoulder: number;
 }
 
 /** Options of `orbitCamera()`. */

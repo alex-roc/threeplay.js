@@ -218,6 +218,7 @@ export const cameraPlugin = definePlugin<CameraAPI>({
           yaw: target.has("rotate") ? objectYaw(target) : cameraYaw(),
           pitch: clamp(15, minPitch, maxPitch),
           distance: wanted,
+          shoulder: opts.shoulder ?? 0,
         };
         return activate<ThirdPersonController>(
           fields as ThirdPersonController,
@@ -231,10 +232,19 @@ export const cameraPlugin = definePlugin<CameraAPI>({
             if (!target.exists()) return;
             const look = targetPos(target).add(new Vector3(0, height, 0));
             const dir = orbitOffset(c.yaw, c.pitch, 1);
+            const walls = avoidWalls && k.plugins.physics && typeof k.raycast === "function";
+            if (walls) exclude ??= [target, ...target.get("*")];
+            if (c.shoulder !== 0) {
+              // The camera's horizontal right: forward (−dir, flattened) × up.
+              const side = new Vector3(dir.z, 0, -dir.x).normalize().multiplyScalar(Math.sign(c.shoulder));
+              let reach = Math.abs(c.shoulder);
+              const hit = walls ? k.raycast(look, side, reach, { exclude: exclude! }) : null;
+              if (hit) reach = Math.max(hit.distance - WALL_MARGIN, 0);
+              look.addScaledVector(side, reach);
+            }
             let allowed = c.distance;
-            if (avoidWalls && k.plugins.physics && typeof k.raycast === "function") {
-              exclude ??= [target, ...target.get("*")];
-              const hit = k.raycast(look, dir, c.distance, { exclude });
+            if (walls) {
+              const hit = k.raycast(look, dir, c.distance, { exclude: exclude! });
               if (hit) allowed = Math.max(Math.min(hit.distance - WALL_MARGIN, c.distance), 0.5);
             }
             // Pull in at once, ease back out.

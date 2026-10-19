@@ -316,6 +316,22 @@ describe("controllers", () => {
     expect((calls[2]![3] as { exclude: unknown[] }).exclude).toBe(opts.exclude);
   });
 
+  it("thirdPerson over the shoulder shifts the camera to its right and keeps the aim parallel", () => {
+    const { k } = make();
+    const target = k.add([k.pos(0, 0, 0)]);
+    const tp = k.thirdPerson(target, { distance: 5, height: 1, shoulder: 0.8 });
+    tp.pitch = 0;
+    k.step(0.016);
+    // Camera on the +Z side looking toward −Z: its right is +X.
+    expect(k.camera3d.position.x).toBeCloseTo(0.8);
+    expect(k.camera3d.position.z).toBeCloseTo(5);
+    expect(dirOf(k).x).toBeCloseTo(0);
+    expect(dirOf(k).z).toBeCloseTo(-1);
+    tp.shoulder = -tp.shoulder; // switch shoulders
+    k.step(0.016);
+    expect(k.camera3d.position.x).toBeCloseTo(-0.8);
+  });
+
   it("thirdPerson without physics keeps the full distance", () => {
     const { k } = make();
     k.thirdPerson(k.add([k.pos()]), { distance: 6 });

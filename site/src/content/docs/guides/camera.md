@@ -129,6 +129,7 @@ cam.yaw += 45;   // read or set cam.yaw, cam.pitch, cam.distance
 | `distance` | `6` | Distance to the target. |
 | `height` | `1` | Height of the point the camera looks at, over the target's origin. |
 | `sensitivity` | `0.15` | Degrees per pixel. |
+| `shoulder` | `0` | Over-the-shoulder offset in meters: the camera and its look-at point move to the right (negative: left), so the target sits off-center and the screen center is free for a crosshair, as in third-person shooters. Change `controller.shoulder` to switch sides. |
 | `avoidWalls` | `true` | Pull the camera in when a wall is between it and the target (needs physics). |
 | `lockOnClick` | `false` | Lock the pointer on click. By default you drag with the left or right button to look around. |
 | `minPitch`, `maxPitch` | `-20`, `60` | Elevation limits, degrees. |
