@@ -8,6 +8,9 @@
    Being logged in is not enough: every publish asks for 2FA. Without a TTY (an agent, CI,
    `!` in Claude Code) npm fails at once with `EOTP` instead of waiting for the browser, so
    either run `npm publish` in a real terminal or pass a code: `npm publish --otp 123456`.
+   A `202` answer ("Your package is being processed and may take a few minutes") is a success,
+   but the version shows up in the registry a few minutes later: check
+   `curl -s https://registry.npmjs.org/threeplay | jq '."dist-tags"'` before tagging.
 4. Tag and release: `git tag -a threeplay@X.Y.Z -m "threeplay X.Y.Z" && git push origin threeplay@X.Y.Z`,
    then `gh release create threeplay@X.Y.Z` with the changelog section.
 5. jsDelivr caches 404s: if the new version doesn't load, purge
