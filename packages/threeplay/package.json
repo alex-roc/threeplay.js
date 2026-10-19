@@ -1,6 +1,6 @@
 {
   "name": "threeplay",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A tiny, kaplay-style 3D game engine on top of three.js and Rapier.",
   "keywords": [
     "game engine",
