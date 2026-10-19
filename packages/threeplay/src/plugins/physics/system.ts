@@ -189,16 +189,26 @@ export class PhysicsSystem {
 
   /**
    * The object's scale changed (`obj.scale.y = 0.5` to crouch, `scaleTo`…): swap its
-   * collider for one of the new size. The body keeps its pose and velocity; contacts
-   * end and start again with the new collider, as when components change.
+   * collider for one of the new size. The body keeps its pose and velocity, and
+   * contacts that still touch carry over without `collideEnd`/`collide` (a squash
+   * animation must not re-fire `onCollide`). A character keeps its feet where they
+   * were: crouching does not drop it, standing up does not sink it into the floor.
    */
   private resize(s: PhysState) {
-    this.contacts.endAll(s, true);
+    const oldBottom = s.bottom;
     if (s.collider) {
       this.byCollider.delete(s.collider.handle);
       this.backend!.world!.removeCollider(s.collider, true);
     }
     this.attachCollider(s);
+    this.contacts.rekey(s);
+    if (s.kind === "character" && s.bottom !== oldBottom) {
+      this.worldTransform(s.obj);
+      _p.y += s.bottom - oldBottom;
+      this.setWorldPosition(s.obj, _p);
+      s.rb!.setTranslation(_p, true);
+      s.lastPos.copy(_p);
+    }
   }
 
   /** Removes the Rapier body of `s`, ending its contacts. */
@@ -285,6 +295,7 @@ export class PhysicsSystem {
       if (started) this.contacts.start(h1, h2);
       else this.contacts.end(h1, h2);
     });
+    this.contacts.settle();
     this.contacts.update();
     if (this.groundWatch.size > 0) {
       for (const s of [...this.groundWatch]) {

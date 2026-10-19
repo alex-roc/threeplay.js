@@ -9,7 +9,7 @@
 
 ### Patch Changes
 
-- 64dde88: The collider of a physics object now follows changes to the object's own scale (crouching with `obj.scale.y = 0.5`, growing, squashing): it is rebuilt at the new size on the next fixed step, keeping the body's pose and velocity. Before, the scale was baked in when the body was created.
+- 64dde88: The collider of a physics object now follows changes to the object's own scale (crouching with `obj.scale.y = 0.5`, growing, squashing): it is rebuilt at the new size on the next fixed step, keeping the body's pose and velocity. Contacts that still touch carry over without firing `onCollide` again, and a `character()` keeps its feet in place, so it crouches without falling and stands up without sinking into the floor. Before, the scale was baked in when the body was created.
 
 ## 0.1.0
 

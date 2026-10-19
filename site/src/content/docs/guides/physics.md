@@ -270,7 +270,7 @@ onKeyPress("g", () => {
 
 ## Limitations to know about
 
-- **The collider follows the object's own scale.** Changing `obj.scale` later (crouching, growing, squashing) rebuilds the collider at the new size on the next fixed step; the body keeps its position and velocity, and its contacts end and start again. Scaling a parent does not resize its children's colliders.
+- **The collider follows the object's own scale.** Changing `obj.scale` later (crouching, growing, squashing) rebuilds the collider at the new size on the next fixed step; the body keeps its position and velocity, and contacts that still touch carry on without a new `onCollide` (a scale animation does not re-fire it). A `character()` keeps its feet in place: `player.scale.y = 0.5` crouches without falling and `= 1` stands up without sinking into the floor. Standing up under a low ceiling pushes into it, so check with `raycast` before you let the player stand. Scaling a parent does not resize its children's colliders.
 - Changing the components of a live object (adding a `body()` later, for instance) rebuilds its body.
 - `hidden` does not disable colliders. Destroy the object or lose the `area()` instead.
 - There are no collision layers or masks: decide what matters with tags in your handlers.

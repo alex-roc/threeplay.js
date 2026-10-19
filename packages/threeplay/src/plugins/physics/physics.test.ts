@@ -85,7 +85,46 @@ describe("physics", () => {
     expect(b.pos.y).toBeCloseTo(0.25, 1);
   });
 
-  it("lets a crouching character duck under a ray", async () => {
+  it("keeps contacts that survive a resize (no collideEnd/collide churn while scaling)", async () => {
+    const k = await make();
+    addFloor(k);
+    const b = k.add([k.pos(0, 3, 0), box(), k.scale(), k.area(), k.body()]);
+    const zone = k.add([k.pos(5, 2, 0), box(), k.scale(), k.area()]);
+    const probe = k.add([
+      k.pos(5, 2, 0),
+      box(0.2, 0.2, 0.2),
+      k.area(),
+      k.body({ kinematic: true }),
+    ]);
+    run(k, 2);
+    let starts = 0;
+    let ends = 0;
+    b.onCollide("floor", () => starts++);
+    b.onCollideEnd("floor", () => ends++);
+    let zoneEnds = 0;
+    zone.onCollideEnd(() => zoneEnds++);
+    // A pulse in width: the box resizes every step but never leaves the floor.
+    let t = 0;
+    run(k, 1, () => {
+      t += 1 / 50;
+      const w = 1 + 0.2 * Math.sin(t * 10);
+      b.scale.set(w, 1, w);
+    });
+    expect(starts).toBe(0);
+    expect(ends).toBe(0);
+    expect(b.isColliding("floor")).toBe(true);
+    // A sensor shrinking away from what it overlapped does end the contact.
+    expect(zone.isColliding(probe)).toBe(true);
+    probe.pos.x = 5.4;
+    run(k, 0.1);
+    expect(zone.isColliding(probe)).toBe(true);
+    zone.scale.set(0.5, 0.5, 0.5);
+    run(k, 0.1);
+    expect(zone.isColliding(probe)).toBe(false);
+    expect(zoneEnds).toBe(1);
+  });
+
+  it("lets a crouching character duck under a ray and stand up again", async () => {
     const k = await make();
     addFloor(k);
     const c = k.add([k.pos(0, 0.8, 0), capsule(0.4, 1.6), k.scale(), k.area(), k.character()]);
@@ -95,6 +134,14 @@ describe("physics", () => {
     c.scale.y = 0.5;
     run(k, 0.5);
     expect(ray()).toBeNull();
+    expect(c.isGrounded()).toBe(true);
+    c.scale.y = 1; // standing up grows the capsule into the floor: it must not stay stuck
+    run(k, 0.5);
+    expect(ray()?.obj === c).toBe(true);
+    expect(c.isGrounded()).toBe(true);
+    c.move(4, 0, 0);
+    run(k, 0.25, () => c.move(4, 0, 0));
+    expect(c.pos.x).toBeGreaterThan(0.5);
   });
 
   it("writes dynamic bodies back in local space and follows code-driven teleports", async () => {

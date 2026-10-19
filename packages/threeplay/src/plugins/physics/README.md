@@ -71,7 +71,7 @@ k.onCollide("player", "coin", (_player, coin) => coin.destroy());
 
 ## Gotchas
 
-- **The collider follows the object's own scale**: changing `obj.scale` (to crouch, grow, squash) swaps the collider for one of the new size on the next fixed step, keeping the body's pose and velocity; contacts end and start again. Scaling a **parent** later does not resize its children's colliders.
+- **The collider follows the object's own scale**: changing `obj.scale` (to crouch, grow, squash) swaps the collider for one of the new size on the next fixed step, keeping the body's pose and velocity; contacts that still touch carry over without a new `collide`. A `character()` keeps its feet in place (crouch and stand up without falling or sinking; check the ceiling before standing). Scaling a **parent** later does not resize its children's colliders.
 - **Static bodies do not follow code**: moving a `body({ isStatic })` object by hand has no effect on
   collisions, and `move()` on one does nothing (it warns once). Use `body({ kinematic: true })` for
   moving platforms.

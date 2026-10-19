@@ -236,7 +236,9 @@ export const cameraPlugin = definePlugin<CameraAPI>({
             if (walls) exclude ??= [target, ...target.get("*")];
             if (c.shoulder !== 0) {
               // The camera's horizontal right: forward (−dir, flattened) × up.
-              const side = new Vector3(dir.z, 0, -dir.x).normalize().multiplyScalar(Math.sign(c.shoulder));
+              const side = new Vector3(dir.z, 0, -dir.x)
+                .normalize()
+                .multiplyScalar(Math.sign(c.shoulder));
               let reach = Math.abs(c.shoulder);
               const hit = walls ? k.raycast(look, side, reach, { exclude: exclude! }) : null;
               if (hit) reach = Math.max(hit.distance - WALL_MARGIN, 0);

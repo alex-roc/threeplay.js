@@ -70,7 +70,7 @@ you hit something non-obvious.
   and a frame of 5 steps resets it: keep `CORE_MAX_SUBSTEPS` in sync with `frame()`).
   "Code moved the object" is detected by comparing the node with what physics last wrote
   (`lastPos`/`lastQuat`), so any new place that writes poses must update them (see `place()`).
-- Rapier colliders can't be resized: a scale change removes the collider and creates a new one on the same body (`resize` in physics/system.ts). Pairs are keyed by collider handle, so contacts end and start again; the scale watch compares only the object's local `scale` (cheap) and ignores parents.
+- Rapier colliders can't be resized: a scale change removes the collider and creates a new one on the same body (`resize` in physics/system.ts). Pairs are keyed by collider handle, so `ContactTracker.rekey` moves them to the new handle and marks them unconfirmed: the next step's start events confirm the ones still touching (no `collide` again) and `settle()` ends the rest. Without that, a scale tween re-fires `onCollide` every step. Characters shift up or down by the change in `bottom` so their feet stay put: Rapier's character controller does not push a collider out of the floor, so a capsule grown in place stays sunk. The scale watch compares only the object's local `scale` (cheap) and ignores parents.
 - Mutually exclusive components declare `conflicts: ["other"]` (checked both ways
   before any property is merged): `body()` and `character()` use it.
 
