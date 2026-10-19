@@ -41,6 +41,12 @@ export interface RotateComp extends Comp {
   id: "rotate";
   /** Euler rotation in degrees (X, Y, Z), applied to `object3d` every frame. */
   rot: THREE.Vector3;
+  /**
+   * Order in which the `rot` angles apply (default `"XYZ"`, three's). Vehicles and
+   * aircraft want `"YXZ"`: heading (Y), then pitch (X), then roll (Z), so rolling never
+   * changes the heading.
+   */
+  rotOrder: THREE.EulerOrder;
   /** Adds degrees to the rotation. */
   rotateBy(x: number, y?: number, z?: number): void;
   /** Turns the object to face a point or object (Y-up). */

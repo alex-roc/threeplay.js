@@ -102,6 +102,16 @@ sign.rotateBy(0, 10, 5);      // or x, y, z
 
 Positive **Y** rotation turns the object to its **left** (counter-clockwise seen from above). `rot` and the three.js node are kept in sync both ways, so physics, `lookAt()` and your own code can all change the rotation, and `rot` always shows the current value.
 
+### Rotation order
+
+With all three angles in play (aircraft, spaceships, a car on a slope) the order matters. The default `"XYZ"` tilts around the world axes, so pitching a plane that has turned 90° tilts it sideways. Set `rotOrder = "YXZ"` and the angles read as a pilot expects: heading (`rot.y`), then pitch (`rot.x`), then roll (`rot.z`).
+
+```js
+const plane = add([box(1, 0.3, 2), pos(0, 20, 0), rotate()]);
+plane.rotOrder = "YXZ";
+plane.rot.set(10, 90, -30);   // nose up 10°, heading 90°, banked 30° to the right
+```
+
 ### Facing directions
 
 ```js

@@ -52,6 +52,20 @@ describe("transform", () => {
     expect(o.rot.y).toBeCloseTo(0);
   });
 
+  it("rotOrder changes how rot applies (YXZ: heading, then pitch, then roll)", () => {
+    const k = make();
+    const o = k.add([k.pos(), k.rotate(30, 90, 0)]);
+    expect(o.rotOrder).toBe("XYZ");
+    expect(o.forward().x).toBeCloseTo(-1); // XYZ: the pitch tilts around the world X axis
+    o.rotOrder = "YXZ";
+    const f = o.forward();
+    expect(f.x).toBeCloseTo(-Math.cos(Math.PI / 6));
+    expect(f.y).toBeCloseTo(0.5); // nose up 30° toward the new heading
+    o.lookAt(k.vec3(0, 0, -5)); // lookAt keeps the order
+    expect(o.object3d.rotation.order).toBe("YXZ");
+    expect(o.forward().z).toBeCloseTo(-1);
+  });
+
   it("forward is -Z and lookAt points it at the target", () => {
     const k = make();
     const o = k.add([k.pos(), k.rotate()]);

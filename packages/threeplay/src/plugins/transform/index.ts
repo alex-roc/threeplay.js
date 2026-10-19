@@ -121,6 +121,15 @@ export const transformPlugin = definePlugin<TransformAPI>({
       return {
         id: "rotate",
         rot: initial.clone(),
+        get rotOrder() {
+          return self(this).object3d.rotation.order;
+        },
+        set rotOrder(order) {
+          const obj = self(this);
+          obj.object3d.rotation.order = order;
+          lastRot.get(obj)?.set(Number.NaN, 0, 0); // re-apply `rot` in the new order
+          syncRotation(obj);
+        },
         rotateBy(dx: number, dy?: number, dz?: number) {
           const obj = self(this);
           if (dy === undefined && dz === undefined) obj.rot.y += dx;
@@ -142,7 +151,7 @@ export const transformPlugin = definePlugin<TransformAPI>({
           } else {
             node.quaternion.copy(_q);
           }
-          _e.setFromQuaternion(node.quaternion);
+          _e.setFromQuaternion(node.quaternion, node.rotation.order);
           obj.rot.set(rad2deg(_e.x), rad2deg(_e.y), rad2deg(_e.z));
           node.rotation.copy(_e);
           lastRot.get(obj)?.copy(obj.rot);
