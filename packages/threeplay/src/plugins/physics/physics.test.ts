@@ -74,6 +74,29 @@ describe("physics", () => {
     expect(b.pos.y).toBeCloseTo(1, 1);
   });
 
+  it("resizes the collider when the object's scale changes later", async () => {
+    const k = await make();
+    addFloor(k);
+    const b = k.add([k.pos(0, 3, 0), box(), k.scale(), k.area(), k.body()]);
+    run(k, 2);
+    expect(b.pos.y).toBeCloseTo(0.5, 1);
+    b.scale.y = 0.5; // the box is squashed around its center: it now falls onto the floor
+    run(k, 2);
+    expect(b.pos.y).toBeCloseTo(0.25, 1);
+  });
+
+  it("lets a crouching character duck under a ray", async () => {
+    const k = await make();
+    addFloor(k);
+    const c = k.add([k.pos(0, 0.8, 0), capsule(0.4, 1.6), k.scale(), k.area(), k.character()]);
+    run(k, 0.5);
+    const ray = () => k.raycast(k.vec3(3, 1.4, 0), k.vec3(-1, 0, 0), 10);
+    expect(ray()?.obj === c).toBe(true);
+    c.scale.y = 0.5;
+    run(k, 0.5);
+    expect(ray()).toBeNull();
+  });
+
   it("writes dynamic bodies back in local space and follows code-driven teleports", async () => {
     const k = await make();
     addFloor(k);

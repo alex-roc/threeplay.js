@@ -146,21 +146,12 @@ export class PhysicsSystem {
       });
     }
     const rb = world.createRigidBody(desc);
-
-    const built = buildCollider(R, obj, s.area, {
-      sensor: isSensorOf(s),
-      dynamic: s.kind === "dynamic",
-    });
-    if (b?.mass !== undefined && s.kind === "dynamic") built.desc.setMass(b.mass);
-    const collider = world.createCollider(built.desc, rb);
     s.rb = rb;
-    s.collider = collider;
-    s.bottom = built.bottom;
+    this.attachCollider(s);
     s.desired.set(0, 0, 0);
     s.lastPos.copy(_p);
     s.lastQuat.copy(_q);
     this.setPose(s, _p, _q);
-    this.byCollider.set(collider.handle, s);
 
     if (s.kind === "character") {
       const c = s.character!;
@@ -180,6 +171,34 @@ export class PhysicsSystem {
     } else if (s.kind === "kinematic" || s.kind === "area") {
       this.driven.add(s);
     }
+  }
+
+  /** Builds the collider of `s` (with the object's current scale) and attaches it to its body. */
+  private attachCollider(s: PhysState) {
+    const be = this.backend!;
+    const built = buildCollider(be.native!, s.obj, s.area, {
+      sensor: isSensorOf(s),
+      dynamic: s.kind === "dynamic",
+    });
+    if (s.body?.mass !== undefined && s.kind === "dynamic") built.desc.setMass(s.body.mass);
+    s.collider = be.world!.createCollider(built.desc, s.rb!);
+    s.bottom = built.bottom;
+    s.scale.copy(s.obj.object3d.scale);
+    this.byCollider.set(s.collider.handle, s);
+  }
+
+  /**
+   * The object's scale changed (`obj.scale.y = 0.5` to crouch, `scaleTo`…): swap its
+   * collider for one of the new size. The body keeps its pose and velocity; contacts
+   * end and start again with the new collider, as when components change.
+   */
+  private resize(s: PhysState) {
+    this.contacts.endAll(s, true);
+    if (s.collider) {
+      this.byCollider.delete(s.collider.handle);
+      this.backend!.world!.removeCollider(s.collider, true);
+    }
+    this.attachCollider(s);
   }
 
   /** Removes the Rapier body of `s`, ending its contacts. */
@@ -208,6 +227,11 @@ export class PhysicsSystem {
   beforeFixed() {
     if (!this.backend?.ready) return;
     if (this.pending.size > 0) for (const s of [...this.pending]) this.build(s);
+    // Only the object's own scale is watched (three compares per object); scaling a
+    // parent later does not resize its children's colliders.
+    for (const s of this.states.values()) {
+      if (s.rb && !s.obj.object3d.scale.equals(s.scale)) this.resize(s);
+    }
     for (const s of this.driven) {
       this.worldTransform(s.obj);
       if (_p.equals(s.lastPos) && _q.equals(s.lastQuat)) continue; // the body is already there

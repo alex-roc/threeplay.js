@@ -42,6 +42,8 @@ export interface PhysState {
   grounded: boolean;
   /** Distance from the body origin down to the bottom of the collider. */
   bottom: number;
+  /** The object's local scale when its collider was built: a change resizes the collider. */
+  scale: Vector3;
   /** World transform physics last wrote to (or read from) the object. */
   lastPos: Vector3;
   lastQuat: Quaternion;
@@ -76,6 +78,7 @@ export function createState(obj: GameObj): PhysState {
     desired: new Vector3(),
     grounded: false,
     bottom: 0,
+    scale: new Vector3(1, 1, 1),
     lastPos: new Vector3(Number.NaN, 0, 0),
     lastQuat: new Quaternion(),
     prevPos: new Vector3(),

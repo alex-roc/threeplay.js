@@ -130,7 +130,7 @@ rock.scale.y = 2;
 rock.scaleTo(0.5);                // uniform again
 ```
 
-Scale applies to the object's shape **and its children**. The collider of a physics object is built from the scale it has when it is created; resizing it later does not resize the collider (see [Physics](/threeplay.js/guides/physics/)).
+Scale applies to the object's shape **and its children**. Changing the scale of a physics object also resizes its collider on the next fixed step, so `player.scale.y = 0.5` really crouches (see [Physics](/threeplay.js/guides/physics/)).
 
 ## Following another object: `follow`
 

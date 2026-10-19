@@ -99,7 +99,8 @@ function sizeOf(d: ShapeDesc): Vector3 | null {
 
 /**
  * Builds the collider of an object from `area()` options and its `shape`.
- * The object's world scale is baked in: scaling it later does not resize the collider.
+ * The object's world scale is baked in; the physics system rebuilds the collider when the
+ * object's own scale changes (see `resize` in system.ts).
  */
 export function buildCollider(
   R: Rapier,

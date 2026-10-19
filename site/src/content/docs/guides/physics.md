@@ -270,7 +270,7 @@ onKeyPress("g", () => {
 
 ## Limitations to know about
 
-- **Scale is baked in** when the collider is created. Scaling an object afterwards does not resize its collider.
+- **The collider follows the object's own scale.** Changing `obj.scale` later (crouching, growing, squashing) rebuilds the collider at the new size on the next fixed step; the body keeps its position and velocity, and its contacts end and start again. Scaling a parent does not resize its children's colliders.
 - Changing the components of a live object (adding a `body()` later, for instance) rebuilds its body.
 - `hidden` does not disable colliders. Destroy the object or lose the `area()` instead.
 - There are no collision layers or masks: decide what matters with tags in your handlers.
